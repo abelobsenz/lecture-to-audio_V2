@@ -1,0 +1,44 @@
+[project]
+name = "lecture-to-audio"
+version = "0.1.0"
+description = "Upload PDFs and generate lecture-style audio using OpenAI."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+authors = [{name = "Codex"}]
+keywords = ["fastapi", "openai", "tts", "pdf", "audio"]
+
+dependencies = [
+  "fastapi>=0.110",
+  "uvicorn>=0.27",
+  "sqlmodel>=0.0.14",
+  "pydantic>=2.6",
+  "python-multipart>=0.0.9",
+  "openai>=1.40.0",
+  "aiofiles>=23.2.1",
+  "httpx>=0.27",
+  "jinja2>=3.1",
+  "python-dotenv>=1.0.1",
+  "pypdf>=4.0.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+lecture-to-audio = "tools.cli:main"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 100
+
+[build-system]
+requires = ["setuptools>=67", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["app", "tools"]
+include-package-data = false

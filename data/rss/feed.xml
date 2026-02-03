@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+<channel>
+  <title>Lecture to Audio</title>
+  <link>http://localhost:8002</link>
+  <description>Generated lectures from uploaded documents.</description>
+  <language>en-us</language>
+  <itunes:explicit>no</itunes:explicit>
+  
+  <item>
+    <title>11a81ab383c044ed40a41f1ee8bd9912_MIT6_453F16_Lect1.pdf</title>
+    <guid>e99c3ac15a18497b88c7fafba7406546</guid>
+    <pubDate>Mon, 02 Feb 2026 00:45:07 GMT</pubDate>
+    <enclosure url="http://localhost:8002/jobs/e99c3ac15a18497b88c7fafba7406546/audio" length="0" type="audio/mp3" />
+  </item>
+  
+  <item>
+    <title>Abe_s_Thm_Proof (10).pdf</title>
+    <guid>a31760f457144c79a72e354c3371deeb</guid>
+    <pubDate>Mon, 02 Feb 2026 00:54:05 GMT</pubDate>
+    <enclosure url="http://localhost:8002/jobs/a31760f457144c79a72e354c3371deeb/audio" length="0" type="audio/mp3" />
+  </item>
+  
+  <item>
+    <title>2.1 The Binomial Branch Model.pdf</title>
+    <guid>3ea7ffe033c9491083df86dd5360063c</guid>
+    <pubDate>Mon, 02 Feb 2026 04:49:44 GMT</pubDate>
+    <enclosure url="http://localhost:8002/jobs/3ea7ffe033c9491083df86dd5360063c/audio" length="0" type="audio/mp3" />
+  </item>
+  
+  <item>
+    <title>2.2 The Binomial Tree Model.pdf</title>
+    <guid>75a24f1841e441eb9ce6be0e33f653fe</guid>
+    <pubDate>Mon, 02 Feb 2026 05:22:17 GMT</pubDate>
+    <enclosure url="http://localhost:8002/jobs/75a24f1841e441eb9ce6be0e33f653fe/audio" length="26321664" type="audio/mp3" />
+  </item>
+  
+  <item>
+    <title>2.4 Overture to continuous models.pdf</title>
+    <guid>eac6bf5de2ba42189fd163d35fd77765</guid>
+    <pubDate>Mon, 02 Feb 2026 05:27:53 GMT</pubDate>
+    <enclosure url="http://localhost:8002/jobs/eac6bf5de2ba42189fd163d35fd77765/audio" length="17453184" type="audio/mp3" />
+  </item>
+  
+  <item>
+    <title>2.3 Binomial Representation Theorem.pdf</title>
+    <guid>079209271ee14439b86fa4d714f1158b</guid>
+    <pubDate>Mon, 02 Feb 2026 05:45:39 GMT</pubDate>
+    <enclosure url="http://localhost:8002/jobs/079209271ee14439b86fa4d714f1158b/audio" length="24994176" type="audio/mp3" />
+  </item>
+  
+</channel>
+</rss>

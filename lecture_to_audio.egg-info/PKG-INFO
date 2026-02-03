@@ -1,0 +1,99 @@
+Metadata-Version: 2.4
+Name: lecture-to-audio
+Version: 0.1.0
+Summary: Upload PDFs and generate lecture-style audio using OpenAI.
+Author: Codex
+License-Expression: MIT
+Keywords: fastapi,openai,tts,pdf,audio
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: fastapi>=0.110
+Requires-Dist: uvicorn>=0.27
+Requires-Dist: sqlmodel>=0.0.14
+Requires-Dist: pydantic>=2.6
+Requires-Dist: python-multipart>=0.0.9
+Requires-Dist: openai>=1.40.0
+Requires-Dist: aiofiles>=23.2.1
+Requires-Dist: httpx>=0.27
+Requires-Dist: jinja2>=3.1
+Requires-Dist: python-dotenv>=1.0.1
+Requires-Dist: pypdf>=4.0.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+
+# lecture-to-audio
+
+Upload PDFs and generate clean lecture-style audio using OpenAI. The API runs on FastAPI and a background worker. A CLI is included for batch processing.
+
+## Setup
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+pip install -e .
+```
+
+Create `.env` from the example:
+
+```bash
+cp .env.example .env
+```
+
+Set `OPENAI_API_KEY` in `.env`.
+
+## Run the server
+
+```bash
+uvicorn app.main:app --reload
+```
+
+Endpoints:
+- `POST /upload`
+- `GET /jobs/{job_id}`
+- `GET /jobs/{job_id}/script`
+- `GET /jobs/{job_id}/audio`
+- `GET /feed.xml`
+- `GET /health`
+
+## CLI batch mode
+
+Process a folder of PDFs without running the server:
+
+```bash
+lecture-to-audio /path/to/pdfs
+```
+
+## iPhone sync (iCloud Drive)
+
+Set `IOS_SYNC_DIR` to an iCloud Drive folder. Example macOS paths:
+
+- `~/Library/Mobile Documents/com~apple~CloudDocs/LectureAudio`
+- `~/Library/Mobile Documents/com~apple~CloudDocs/Podcasts/LectureAudio`
+
+Final output name format:
+`Title - YYYYMMDD - jobid.m4a`
+
+## Podcast RSS on iPhone
+
+Set `PUBLIC_BASE_URL` in `.env` (for example your local tunnel or server URL), then subscribe in a podcast app to:
+
+`PUBLIC_BASE_URL/feed.xml`
+
+## Troubleshooting
+
+- Large PDFs: reduce `MAX_PAGES_PER_CHUNK` or use smaller input PDFs.
+- Long TTS: audio is generated in segments and concatenated with `ffmpeg` if available. If `ffmpeg` is missing and output format is `m4a`, the server will return an `.m3u` playlist.
+- OpenAI errors: verify `OPENAI_API_KEY` and model names in `.env`.
+
+## Tests
+
+```bash
+pip install -e .[dev]
+pytest
+```
+
+## Development notes
+
+- Data directories are under `data/` for uploads, extracted chunks, scripts, audio, and RSS.
+- This MVP supports PDF processing; image and docx inputs are validated but not yet processed.

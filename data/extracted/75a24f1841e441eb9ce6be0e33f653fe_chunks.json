@@ -1,0 +1,544 @@
+[
+  {
+    "chunk_summary": "Pages 1\u20133 introduce the binomial tree model. Page 1 motivates moving from a one-step branch model to a tree model, lists the two traded instruments (stock S and discount bond B), and states market assumptions (unlimited trading, no transaction costs/default/spreads). Page 2 describes the discrete-time stock evolution: at tick-time i the stock has 2^i possible states and each node s_j branches to two child nodes with branch probabilities p_j (up) and 1-p_j (down). A schematic binary/recombining tree is shown. Page 3 discusses the cash (discount) bond: more realistic formulation uses a sequence of known short rates R_0, R_1, ..., so the bond accumulated value over n periods is B_0 exp(sum_{i=0}^{n-1} R_i \u0394t); for simplicity a constant rate r is assumed so B grows as B_0 exp(r \u0394t) per period (and B_0 exp(r n \u0394t) after n periods).",
+    "key_definitions": [
+      {
+        "term": "Stock (S)",
+        "symbol": "S",
+        "definition": "A risky asset whose discrete-time price process evolves on a binomial tree. At tick-time i there are 2^i possible stock price states."
+      },
+      {
+        "term": "Discount bond / Cash bond (B)",
+        "symbol": "B, B_0",
+        "definition": "A risk-free cash instrument. B_0 denotes initial bond price; its accumulated value after one or more periods is given by the exponential of the (possibly time-varying) short rates."
+      },
+      {
+        "term": "Tick-time / period",
+        "symbol": "\\Delta t (implicitly)",
+        "definition": "The fixed time length between discrete tree levels (referred to as a tick or period)."
+      },
+      {
+        "term": "Branch probabilities (p_j)",
+        "symbol": "p_j",
+        "definition": "At node s_j, the physical (real-world) probability of an up move to the corresponding child node at the next tick; the down probability is 1 - p_j."
+      },
+      {
+        "term": "Short rates (R_i)",
+        "symbol": "R_0, R_1, \\ldots",
+        "definition": "A (possibly time-varying) sequence of interest rates known at the start of each period; used to accumulate the bond value across periods."
+      }
+    ],
+    "theorems": [],
+    "equations": [
+      {
+        "latex": "\\text{Number of stock states at tick }i:\\quad 2^{i}",
+        "meaning": "At discrete time (tick) i the stock price process can occupy any of 2^i distinct nodes/states.",
+        "intuition": "Each period every existing node splits into two child nodes, so the count doubles each tick."
+      },
+      {
+        "latex": "s_j \\xrightarrow{p_j} s_{2j+1},\\qquad s_j \\xrightarrow{1-p_j} s_{2j}",
+        "meaning": "From node j (price s_j) the stock can move 'up' to s_{2j+1} with probability p_j or 'down' to s_{2j} with probability 1-p_j.",
+        "intuition": "Binary branching: each node has exactly two possible next-period outcomes with complementary probabilities."
+      },
+      {
+        "latex": "B\\bigl(n\\Delta t\\bigr) = B_0\\exp\\Bigl(\\sum_{i=0}^{n-1} R_i\\,\\Delta t\\Bigr)",
+        "meaning": "General accumulated value of the cash bond at time n\\Delta t when short rates R_i can vary by period.",
+        "intuition": "Compound (continuous) accumulation across periods using the known short rates for each period; sum in exponent totals the period log-growth."
+      },
+      {
+        "latex": "B\\bigl(n\\Delta t\\bigr) = B_0\\exp\\bigl(r\\,n\\Delta t\\bigr)\\quad\\text{(constant rate }r\\text{)}",
+        "meaning": "Simplified bond accumulation when a constant interest rate r is assumed for every period.",
+        "intuition": "Under constant continuous rate r, bond value grows exponentially at rate r per unit time; after one period B_0\\exp(r\\Delta t)."
+      }
+    ],
+    "figures": [
+      {
+        "id": "Figure 2.3",
+        "type": "binary tree / schematic",
+        "description": "Binary tree illustration showing numbered nodes and a local depiction of a node s_j branching to two child nodes at time i+1: s_{2j+1} (up) with prob. p_j and s_{2j} (down) with prob. 1-p_j.",
+        "axes": "Implicit horizontal axis = time (tick i to i+1); vertical axis = different node indices / price states (no numeric axes shown).",
+        "trend": "Each node splits into two possible next-period states (up/down); the number of possible states doubles each tick.",
+        "significance": "Visualizes the discrete-time binomial evolution of the stock price and the local branching probabilities used to build the full tree and to perform backward induction pricing."
+      }
+    ],
+    "tables": []
+  },
+  {
+    "chunk_summary": "Pages 4\u20136 cover: (1) conceptual remarks on the binomial tree model and its relation to continuous-time limits (\"Trees are complex\"); (2) the backward-induction principle (\"Backwards induction\"): terminal payoff as a boundary condition, knowledge of stock history (filtration), uniqueness of claim value at each node, and the importance/realism of a finite tree; (3) the two-step/local pricing formula (\"The two-step\"): at any node the derivative value is a discounted expectation of the two successor node values under a node-specific modified (risk-neutral) probability q_j, and an illustration (double-fork tree) showing how nodes and q_j appear across two periods.",
+    "key_definitions": {
+      "tick-time (i)": "Discrete time index for the tree; at tick-time i the stock can take on multiple possible node values.",
+      "node": "A unique state in the tree at a given tick-time that carries a stock price and associated claim value.",
+      "branch / fork": "A connection from one node to its two successor nodes (up and down) in the next tick-time.",
+      "boundary condition": "The known value of the derivative at expiration (terminal time); used as the starting point for backward induction.",
+      "filtration": "The history of the stock process up to a given node (the information available at that node).",
+      "finiteness of the tree": "The property that the tree has a finite number of time steps/nodes (reasonable since most claims expire).",
+      "discounted expectation (local pricing)": "The claim value at a node equals the present value of the expectation of successor-node claim values under an appropriate probability q_j.",
+      "q_j (modified / local risk-neutral probability)": "A node-specific probability used to price derivatives locally so that discounted expected successor payoffs equal current price; derived from no-arbitrage relationships between stock and bond prices at that node."
+    },
+    "theorems": [],
+    "equations": [
+      {
+        "latex": "f(j) = e^{-r\\,\\delta t}\\left(q_j\\,f(2j+1) + (1-q_j)\\,f(2j)\\right)",
+        "meaning": "Price (value) f(j) of the derivative at node j (time i) equals the discounted expected value of the derivative at the two successor nodes at time i+1, under the local probability q_j.",
+        "intuition": "Construct a local (stock, bond) hedging portfolio that replicates successor payoffs; absence of arbitrage forces the current price to equal the discounted weighted average (expectation) of the two possible next-step prices using the adjusted probability q_j."
+      },
+      {
+        "latex": "q_j = \\frac{s_j\\exp(r\\,\\delta t) - s_{2j}}{s_{2j+1} - s_{2j}}",
+        "meaning": "The node-specific modified probability q_j expressed in terms of the node's current stock price s_j and the prices at the two successor nodes s_{2j} (down) and s_{2j+1} (up), with discounting via exp(r delta t).",
+        "intuition": "q_j is chosen so that the expected successor stock price under q_j, when discounted at the risk-free rate, equals the current stock price (no-arbitrage martingale condition for the stock under the local pricing measure). Algebraically it solves the linear replication/ pricing conditions for the one-step subtree."
+      }
+    ],
+    "figures": [
+      {
+        "id": "Figure 2.4",
+        "type": "diagram (binary tree / double fork)",
+        "description": "A small double-fork binary tree illustrating node numbering over two periods: root node (time 0), two nodes at time 1, and four terminal nodes at time 2. The figure labels the branches with their local probabilities q1, q2, q3 and shows which successor nodes correspond to s_{2j} and s_{2j+1}.",
+        "axes": "Implicit time axis (horizontal): time 0 (root) -> time 1 (intermediate nodes) -> time 2 (terminal nodes). Node values (stock prices or claim values) are attached to nodes, not continuous axes.",
+        "trend": "Branching structure: from each node there are two outgoing branches (up and down) leading to two successor nodes; demonstrates recombining/double-fork structure across two steps.",
+        "significance": "Visualizes the two-step pricing set-up used to derive the local discounted-expectation formula and the node-specific probabilities q_j; aids understanding of backward induction and path decomposition into local branches."
+      }
+    ],
+    "tables": []
+  },
+  {
+    "chunk_summary": "Pages 7\u20139 develop the two-step binomial-tree valuation for a contingent claim. At each node j the claim value f(j) is the discounted expectation of the two child-node claim values under a node-specific \"arbitrage\" (risk-neutral) probability q_j. The modified probability q_j is solved by no-arbitrage via matching the current stock price to the discounted expected stock price at the next tick. For the two-step example the slide shows the one-step recursions (e.g. f(3) from f(6),f(7)), the one-branch recursion from node 1 to nodes 2 and 3, and the full two-step expansion expressing f(1) as a discounted weighted sum of the four terminal claim values. Page 9 emphasizes that path probabilities equal the product of branch q's, so the two-step expectation is the sum of the four terminal payoffs weighted by q1 q3, q1(1\u2212q3), (1\u2212q1)q2 and (1\u2212q1)(1\u2212q2).",
+    "key_definitions": {
+      "f(j)": "The value of the contingent claim at node j (at the current tick/time).",
+      "q_j": "Node-specific modified (risk-neutral / arbitrage) probability of an up-jump from node j used to discount and take expectations so that no-arbitrage pricing holds.",
+      "\u03b4t": "Length of the discrete time period (tick length) between nodes.",
+      "discounted expectation": "Valuation principle that the present node value equals the risk-free discount factor times the expectation (under q_j) of the next-period claim values.",
+      "probability tree (q1,q2,q3)": "The collection of node-specific q's for a small tree; these q's determine path probabilities by multiplication.",
+      "path probability": "Probability assigned to a complete path through the tree, equal to the product of the branch q or (1\u2212q) factors along that path."
+    },
+    "theorems": [
+      {
+        "id": "No-arbitrage node valuation (informal)",
+        "statement": "At any node j the arbitrage-free value of the claim is the discounted q_j-expectation of the two next-period claim values: f(j)=e^{-r \u03b4t}[ q_j f(2j+1) + (1\u2212q_j) f(2j) ].",
+        "intuition": "Construct a locally risk-free portfolio (stock + bond) that replicates the two possible next-period payoffs; equating the portfolio cost to the discounted expected payoff under the unique q_j enforces no-arbitrage and produces the node valuation formula."
+      },
+      {
+        "id": "Path probability multiplicativity",
+        "statement": "The probability assigned to a full path through the tree equals the product of the branch probabilities along that path (e.g. P(up then up)=q1 q3).",
+        "intuition": "Independence of successive branch choices (in the model) implies path probability is the multiplication of the per-branch probabilities; this yields the weights used in the multi-step discounted expectation."
+      }
+    ],
+    "equations": [
+      {
+        "latex": "f(j)=e^{-r\\,\\delta t}\\left(q_j\\,f(2j+1)+(1-q_j)\\,f(2j)\\right)",
+        "meaning": "Node j claim value equals the risk-free discount factor times the expectation (under q_j) of the two child-node claim values.",
+        "intuition": "Form a local hedge that replicates the two possible next-period payoffs; no-arbitrage forces the present value to be the discounted weighted average (weights q_j and 1\u2212q_j)."
+      },
+      {
+        "latex": "q_j=\\frac{s_j\\exp(r\\,\\delta t)-s_{2j}}{s_{2j+1}-s_{2j}}",
+        "meaning": "The node-specific arbitrage (risk-neutral) probability q_j is chosen so the discounted expected stock price equals the current stock price.",
+        "intuition": "Solve for q_j by requiring that the expected (under q_j) next-period stock price, discounted at the risk-free rate, equals the current stock price (no-arbitrage / martingale condition for discounted stock)."
+      },
+      {
+        "latex": "f(3)=e^{-r\\,\\delta t}\\left(q_3\\,f(7)+(1-q_3)\\,f(6)\\right)",
+        "meaning": "Example: the value at node 3 is the discounted q_3-weighted average of terminal node values f(7) and f(6).",
+        "intuition": "Apply the general one-step node valuation at node 3 using its two child nodes."
+      },
+      {
+        "latex": "f(1)=e^{-r\\,\\delta t}\\left(q_1\\,f(3)+(1-q_1)\\,f(2)\\right)",
+        "meaning": "Value at node 1 is the discounted q_1-expectation of the two next-period claim values at nodes 3 (up) and 2 (down).",
+        "intuition": "Same local discounted-expectation principle applied at the root's immediate branch."
+      },
+      {
+        "latex": "f(1)=e^{-2r\\,\\delta t}\\big[ q_1 q_3 f_7 + q_1(1-q_3) f_6 + (1-q_1) q_2 f_5 + (1-q_1)(1-q_2) f_4 \\big]",
+        "meaning": "Full two-step expansion: the time-0 value equals the two-period discount factor times the sum of terminal payoffs weighted by their path probabilities.",
+        "intuition": "Substitute the one-step recursions twice and collect terms; each terminal node payoff is multiplied by the product of branch q-factors that lead to it, reflecting path probabilities."
+      },
+      {
+        "latex": "P(\\text{up,up})=q_1 q_3,\\quad P(\\text{up,down})=q_1(1-q_3),\\quad P(\\text{down,up})=(1-q_1)q_2,\\quad P(\\text{down,down})=(1-q_1)(1-q_2)",
+        "meaning": "Explicit probabilities for the four two-step paths in terms of the node q's.",
+        "intuition": "Each path probability is the product of the probability factors along the path (multiplicative rule for sequential branch probabilities)."
+      }
+    ],
+    "figures": [
+      {
+        "id": "Figure 2.4",
+        "type": "diagram / binary tree",
+        "description": "Double-fork tree at time 0 showing root node 1 branching to nodes 3 (up) and 2 (down), then each of those branching to two terminal nodes (labels 4\u20137). The figure annotates branch probabilities q1, q2, q3 and shows the time levels (time 0, time 1, time 2).",
+        "axes": {
+          "x": "time level (discrete ticks: 0,1,2)",
+          "y": "node index / branch position (qualitative)"
+        },
+        "trend": "Branching structure: root splits into up/down; each child splits again producing four terminal outcomes. No continuous trend\u2014discrete up/down paths.",
+        "significance": "Visual support for the two-step recursion: clarifies which q_j applies on each branch and how terminal nodes map to f(6), f(7), f(4), f(5) in the algebraic expansions."
+      },
+      {
+        "id": "small tree illustrations (pages 8)",
+        "type": "schematic tree snippets",
+        "description": "Small schematic depictions on page 8 used to illustrate the local one-step derivation (e.g., the sub-tree whose parent is node 3 and children f(6), f(7)).",
+        "axes": {
+          "x": "time index (parent to children)",
+          "y": "node position"
+        },
+        "trend": "Local up/down split emphasizing the pairwise child nodes used in the f(j) formula.",
+        "significance": "Helps the reader map algebraic expressions to specific branches and terminals when forming the f(1) expansion."
+      }
+    ],
+    "tables": []
+  },
+  {
+    "chunk_summary": "Pages 10\u201312 cover: (1) The inductive step for pricing contingent claims on a binomial tree: starting from the final layer (expiration) and using local, risk-free replication at each final branch to assign arbitrage-free values at the preceding nodes; (2) The inductive result: repeating the step yields a unique time-zero value for the derivative and a sequence of node-specific construction portfolios (\u03c6_j, \u03c8_j) that replicate the claim along any path; (3) A worked example setup: a recombining 3-period binomial tree with node stock prices shown, up-probability p = 3/4 and down p = 1/4, interest rate assumed zero, and the question posed of valuing a European call with strike 100 at time 3 (setup only on these pages).",
+    "key_definitions": [
+      {
+        "term": "Node",
+        "symbol": "node (time-layer index j)",
+        "definition": "A distinct state of the stock price at a specific tick/time in the binomial tree; each node has an associated claim value when pricing a contingent claim."
+      },
+      {
+        "term": "Branch / Branchlet",
+        "definition": "A one-step connection between a node at time i and its two successor nodes at time i+1 (up and down outcomes)."
+      },
+      {
+        "term": "Claim value at a node",
+        "symbol": "f_j (or f(j))",
+        "definition": "The arbitrage-free value of the contingent claim when the process is at node j (at the corresponding time)."
+      },
+      {
+        "term": "Construction (replicating) portfolio",
+        "symbol": "(\u03c6_j, \u03c8_j)",
+        "definition": "A local portfolio of \u03c6_j units of stock and \u03c8_j units of the bond (cash) formed at node j that replicates the claim's one-step-ahead payoff(s) and thus enforces the arbitrage-free claim value at that node."
+      },
+      {
+        "term": "Arbitrage-guaranteed (arbitrage-free) value",
+        "definition": "A node's claim value that must hold to preclude arbitrage, enforced by existence of a replicating portfolio producing the same payoffs in all successor states."
+      },
+      {
+        "term": "Recombining tree",
+        "definition": "A binomial tree in which different sequences of up/down moves can lead to the same node (stock price), reducing the total number of distinct nodes."
+      },
+      {
+        "term": "Filtration (informal)",
+        "definition": "The history of observed stock prices up to a given time \u2014 the information set used to determine the node and the claim value there."
+      }
+    ],
+    "theorems": [
+      {
+        "id": "Inductive existence and uniqueness of node prices",
+        "statement": "If at the final layer (expiration) the contingent claim's terminal payoffs are specified, and for every one-step branch there exists a local replicating portfolio (\u03c6, \u03c8) that reproduces the claim's next-step payoffs, then by backward induction every node in the tree has a uniquely enforced arbitrage-free claim value. Repeating this from the terminal layer back to time 0 produces a unique time-zero price and node-specific replicating portfolios.",
+        "proof_sketch": "Base case: terminal payoffs are given. Inductive step: given that successor nodes have arbitrage-free claim values, construct a local replicating portfolio on any branch from a parent node to its two successors; the cost of this portfolio enforces a unique value at the parent node (otherwise arbitrage). Applying this step backwards from the final layer iteratively yields enforced values at all earlier nodes; uniqueness follows because any deviation produces arbitrage opportunities. Intuition: local replication eliminates state-specific risk locally; chaining these local hedges yields a global replication strategy."
+      },
+      {
+        "id": "Path-independence of final replication",
+        "statement": "There exists a global construction strategy (a sequence of local (\u03c6_j, \u03c8_j) portfolios, changing at each tick) which, regardless of which path the stock follows, replicates the contingent claim's final payoff.",
+        "proof_sketch": "From the inductive construction: at each node the local portfolio exactly matches the claim's one-step continuation values, so following any path and rebalancing according to the node-specific \u03c6_j and \u03c8_j results in the same final payoff (the claim's payoff). Intuition: because each node's portfolio enforces the claim value for all successor outcomes, chaining them enforces the terminal payoff irrespective of path."
+      }
+    ],
+    "equations": [],
+    "figures": [
+      {
+        "id": "Figure 2.5",
+        "type": "recombinant binomial tree diagram",
+        "description": "A recombining 3-period binomial tree showing stock prices at each node: initial price 100 at time 0; at time 1: up 120 / down 80; time 2 nodes 140/100/60; time 3 nodes 160/140/120/100/80/60/40 (displayed as the recombining structure). Up-probability labeled 3/4 on up branches and 1/4 on down branches; interest rate assumed 0. The example asks for the price of a call with strike 100 at time 3.",
+        "axes": {
+          "horizontal": "time (discrete periods 0 \u2192 1 \u2192 2 \u2192 3)",
+          "vertical": "stock price values at nodes (discrete levels)"
+        },
+        "trend": "At each time step the stock either moves up or down; due to recombination some sequences (e.g., up then down) lead to node prices that coincide with other sequences (reducing distinct nodes).",
+        "significance": "Sets up a concrete recombining-tree example used to illustrate backward induction pricing and replication: fewer distinct nodes reduce computation and demonstrate how node values are computed and replicated in practice."
+      }
+    ],
+    "tables": []
+  },
+  {
+    "chunk_summary": "Pages 13\u201315 present a worked example of pricing and hedging a European call option on a recombinant two-state-per-step binomial tree with 3 time steps. The slide set: (1) defines the risk-neutral (arbitrage) probability q = (s_now - s_down)/(s_up - s_down) and the one-step valuation f_now = q f_up + (1-q) f_down, (2) applies backward induction to compute node-by-node claim values (numerical example yields option price $15 at time 0), and (3) derives the dynamic hedge ratio phi = (f_up - f_down)/(s_up - s_down) and shows stepwise rebalancing and associated borrowings along up/down paths (phi values and cumulative borrowings are computed for example paths). The material demonstrates valuation by discounted expectation under the q-measure via backward induction and construction of a self-financing replicating portfolio by local hedging.",
+    "key_definitions": {
+      "recombinant tree": "A binomial tree where different sequences of up/down moves can lead to the same node (reduces number of distinct nodes and simplifies computation).",
+      "q (risk-neutral probability)": "The arbitrage-adjusted probability of an up-jump used for pricing (not necessarily the real-world probability).",
+      "f (claim value process)": "The value of the derivative/option at each node in the tree.",
+      "phi (\u03c6, hedge ratio)": "Number of shares of stock to hold in the locally constructed replicating portfolio at a node; chosen so that the portfolio replicates the option payoff over the next step.",
+      "f_up, f_down": "Claim values at the up and down next-step nodes used to compute local hedge and value.",
+      "s_up, s_down, s_now": "Stock prices at the up, down and current node respectively."
+    },
+    "theorems": [],
+    "equations": [
+      {
+        "latex": "q = \\dfrac{s_{now} - s_{down}}{s_{up} - s_{down}}",
+        "meaning": "Definition of the local (risk-neutral / arbitrage) probability of an up move that makes discounted expected stock growth equal to the risk-free rate in the one-step model.",
+        "intuition": "q is chosen so a one-step expected price (under q) matches the no-arbitrage discounted value; it converts underlying up/down moves into a probability measure suitable for pricing."
+      },
+      {
+        "latex": "f_{now} = q\\,f_{up} + (1-q)\\,f_{down}",
+        "meaning": "One-step valuation of the claim: the current claim value is the (discounted, here r=0 so omitted) expectation of the two possible next-step claim values under q.",
+        "intuition": "Because a risk-free replicating portfolio exists, the fair current price equals the risk-neutral expected future payoff (discounted); for r=0 this is just the q-weighted average."
+      },
+      {
+        "latex": "\\varphi = \\dfrac{f_{up} - f_{down}}{s_{up} - s_{down}}",
+        "meaning": "Hedge ratio (number of shares) computed to replicate the option payoff over the next step by holding phi shares and the residual in bonds.",
+        "intuition": "Phi equates the portfolio's two possible terminal values to the option's up/down payoffs, eliminating exposure to the risky up/down move (local delta-hedge)."
+      },
+      {
+        "latex": "F(2_{up,up}) = \\frac{60 + 20}{2} = 40,\\quad F(2_{up,down}) = \\frac{0+20}{2} = 10,\\quad F(2_{down,down})=\\frac{0+0}{2}=0",
+        "meaning": "Numerical backward-induction calculations for claim values at nodes two steps before expiration (using q = 1/2 and r=0).",
+        "intuition": "At each parent node the claim value is the average of its immediate children's claim values under q=1/2; these values then feed into earlier nodes."
+      },
+      {
+        "latex": "F(1_{up}) = \\frac{40+10}{2} = 25,\\quad F(1_{down})=\\frac{10+0}{2}=5,\\quad F(0)=\\frac{25+5}{2}=15",
+        "meaning": "Continuation of the numerical backward induction to obtain the option price at time 0: $15.",
+        "intuition": "Recursive averaging (risk-neutral expectation) yields the time-0 fair price; each level averages the two possible next-level values."
+      },
+      {
+        "latex": "\\varphi_{t=0} = \\dfrac{25-5}{120-80} = 0.5,\\quad \\varphi_{t=1,\\,up}=\\dfrac{40-10}{140-100}=0.75,\\quad \\varphi_{t=2,\\,uu}=\\dfrac{60-20}{160-120}=1",
+        "meaning": "Numeric hedge ratios at successive nodes used in the example (time 0, time 1 after an up move, time 2 after two ups).",
+        "intuition": "As the option becomes more sensitive to the stock (e.g., deeper ITM) the hedge ratio increases, requiring more shares to replicate the option payoff."
+      },
+      {
+        "latex": "\\text{Borrowing at }t=0: \\; 50\\text{ (cost of 0.5 shares)} - 15\\text{ (proceeds from selling option)} = 35",
+        "meaning": "Calculation of required bond borrowing at time 0 to fund initial hedged position in the example.",
+        "intuition": "The replicating portfolio is financed by selling the option (cash inflow) and borrowing to buy the necessary shares."
+      }
+    ],
+    "figures": [
+      {
+        "id": "Figure 2.5",
+        "type": "recombinant binomial tree diagram (stock price tree)",
+        "description": "A 3-step recombinant binomial tree of stock prices with initial price 100, up/down transitions producing node prices 120/80 at time 1, 140/100/60 at time 2, and 160/120/80/40 at time 3. The real-world up/down probabilities shown are p_up = 3/4 and p_down = 1/4.",
+        "axes": {
+          "horizontal": "time steps (0,1,2,3)",
+          "vertical": "stock price at each node (discrete values shown at nodes)"
+        },
+        "trend": "Paths alternate up and down moves; because the tree is recombinant, different sequences can arrive at the same intermediate price (e.g., up then down = down then up).",
+        "significance": "Illustrates the underlying asset evolution used in the worked example; recombination reduces nodes and simplifies backward induction."
+      },
+      {
+        "id": "Figure 2.6 / 2.7",
+        "type": "option claim value trees / diagrams",
+        "description": "Depictions of option payoffs at expiration (values {0,0,20,60}) and the computed claim-values at earlier times (nodes labeled 40,10,0 at time2; 25,5 at time1; 15 at time0).",
+        "axes": {
+          "horizontal": "time levels (0 to 3)",
+          "vertical": "option payoff / claim value at nodes"
+        },
+        "trend": "Claim values at earlier nodes are the q-weighted averages of later node values; illustrated by concentric highlighting of computed averages.",
+        "significance": "Graphical demonstration of backward induction: how terminal payoffs propagate backward to determine the option price and intermediate values used for hedging."
+      }
+    ],
+    "tables": []
+  },
+  {
+    "chunk_summary": "Slides 16\u201318 continue the worked recombining-binomial example and show the hedging (replication) strategy along two sample paths, and how risk-neutral expectation prices the option. Slide 16 computes hedge ratios (\u03c6) and cumulative borrowing along the all-up path (0 \u2192 up \u2192 up \u2192 down) showing \u03c6 evolves from 0.5 \u2192 0.75 \u2192 1 and borrowing accumulates to $100 before final settlement. Slide 17 follows a different path (0 \u2192 down \u2192 up \u2192 down), showing \u03c6 updates 0.5 \u2192 0.25 \u2192 0.5 and borrowing/repayment adjustments that result in a break-even final position when the option expires out-of-the-money. Slide 18 shows the expectation calculation under the risk-neutral measure Q (q = 1/2 at each node in this example) which yields option price $15, and contrasts it with the physical measure p (up-probability 3/4) which would give an unrelated expectation ($33.75). The slides illustrate: local hedge construction, self-financing financing/borrowing bookkeeping, and that the arbitrage-free price equals the discounted Q-expectation of the payoff.",
+    "key_definitions": {
+      "phi (\u03c6)": "Hedge ratio (units of stock) held to replicate the derivative locally: \u03c6 = (f_up \u2212 f_down) / (s_up \u2212 s_down).",
+      "psi (\u03c8)": "Bond holding needed to complete the local replication portfolio; determined so portfolio value equals option value at the node.",
+      "q (risk-neutral probability)": "The arbitrage (risk-neutral) probability used for pricing; in this worked example q = 1/2 at every node.",
+      "p (physical probability)": "Actual (historical) up-jump probability used for real-world path generation (here p_up = 3/4).",
+      "self-financing portfolio": "A trading strategy where changes in holdings are funded only by proceeds from the portfolio (borrowing/lending), with no external cash injections after inception.",
+      "ITM / OTM": "In-the-money (option payoff positive at expiry) / Out-of-the-money (option payoff zero at expiry).",
+      "Q-expectation pricing principle": "The arbitrage-free price equals the discounted expectation of the payoff under the risk-neutral measure Q."
+    },
+    "theorems": [
+      {
+        "name": "Risk-neutral valuation / Replication result (instantiated)",
+        "statement": "If a derivative can be replicated by a self-financing portfolio of stock and bond along the binomial tree, then its arbitrage-free price equals the discounted expectation of its terminal payoff under the unique risk-neutral measure Q (constructed from local q's).",
+        "notes": "Slides 16\u201318 illustrate this: the replication strategy yields final payoffs matching the option for every path, and the Q-expectation equals $15, the time-0 price."
+      }
+    ],
+    "equations": [
+      {
+        "latex": "\\displaystyle \\varphi=\\frac{f_{\\text{up}}-f_{\\text{down}}}{s_{\\text{up}}-s_{\\text{down}}}",
+        "meaning": "General formula for the hedge ratio (units of stock) that replicates the derivative across one binomial step.",
+        "intuition": "Choose \u03c6 so that the stock-position payoff difference between up and down outcomes matches the derivative payoff difference, eliminating stock-price risk locally."
+      },
+      {
+        "latex": "\\displaystyle \\varphi_{t=2,\\,\\text{up,up}}=\\frac{60-20}{160-120}=1",
+        "meaning": "Instantiated hedge ratio at time 2 along the all-up path: one unit of stock is required.",
+        "intuition": "When option payoffs differ by 40 and the stock outcomes differ by 40, one stock per option perfectly replicates the payoff increments."
+      },
+      {
+        "latex": "\\displaystyle \\text{Borrowing increment} = (\\Delta\\varphi)\\times S_{\\text{current}}",
+        "meaning": "Change in bond position (i.e., additional borrowing/lending) required to finance the adjustment in stock holdings at a node.",
+        "intuition": "When increasing stock holdings by \u0394\u03c6 you must finance the purchase at current stock price, which increases net borrowing by \u0394\u03c6\u00b7S."
+      },
+      {
+        "latex": "\\displaystyle V_0=E_{Q}[\\text{discounted payoff}]\\\\\\text{(in example, }V_0=(1/8)\\cdot 60+(3/8)\\cdot 20=15\\text{)}",
+        "meaning": "Time-0 value equals Q-expectation of terminal payoff (no discounting needed here because interest = 0 in example); computed using path probabilities under Q.",
+        "intuition": "Under the risk-neutral measure, weighted average of possible payoffs (weights = path Q-probabilities) gives the fair arbitrage-free price."
+      },
+      {
+        "latex": "\\displaystyle Q\\text{-path probabilities: }(1/2)^3=1/8\\text{ (single:path)},\\quad 3\\times(1/2)^3=3/8\\text{ (three-path multiplicity)}",
+        "meaning": "For 3 periods with q = 1/2 each step, the probabilities of 0,1,2,3 ups are given by binomial counts; the two nonzero payoff outcomes (60 and 20) occur with multiplicities that yield probabilities 1/8 and 3/8.",
+        "intuition": "Equal up/down risk-neutral probabilities produce symmetric binomial probabilities; multiply per-step q's along each path and sum paths producing same terminal node."
+      },
+      {
+        "latex": "\\displaystyle P\\text{-probabilities example: }(3/4)^3=27/64,\\quad 3\\times(3/4)^2(1/4)=27/64,\\quad 3\\times(3/4)(1/4)^2=9/64,\\quad(1/4)^3=1/64",
+        "meaning": "Physical-measure path probabilities when real-world up-probability p = 3/4; leads to a different expectation for the option payoff (here $33.75).",
+        "intuition": "Real-world probabilities of sequences differ from risk-neutral ones; using p to compute expectation does not yield the arbitrage-free price unless p = q."
+      }
+    ],
+    "figures": [],
+    "tables": [
+      {
+        "id": "Table 2.1",
+        "description": "Option and portfolio development along the all-up path (time 0 \u2192 up \u2192 up \u2192 down). Shows stock price, option value, hedge ratio \u03c6, and bond holding \u03c8 at successive times for that path.",
+        "key_rows": [
+          {
+            "Time": 0,
+            "LastJump": "-",
+            "StockPrice_Si": 100,
+            "OptionValue_Vi": 15,
+            "StockHolding_phi": 0.5,
+            "BondHolding_psi": -35
+          },
+          {
+            "Time": 1,
+            "LastJump": "up",
+            "StockPrice_Si": 120,
+            "OptionValue_Vi": 25,
+            "StockHolding_phi": 0.75,
+            "BondHolding_psi": -65
+          },
+          {
+            "Time": 2,
+            "LastJump": "up",
+            "StockPrice_Si": 140,
+            "OptionValue_Vi": 40,
+            "StockHolding_phi": 1.0,
+            "BondHolding_psi": -100
+          },
+          {
+            "Time": 3,
+            "LastJump": "down (from 140\u2192120)",
+            "StockPrice_Si": 120,
+            "OptionValue_Vi": 20,
+            "StockHolding_phi": 1.0,
+            "BondHolding_psi": -100
+          }
+        ],
+        "key_columns": [
+          "Time",
+          "LastJump",
+          "StockPrice_Si",
+          "OptionValue_Vi",
+          "StockHolding_phi",
+          "BondHolding_psi"
+        ]
+      },
+      {
+        "id": "Table 2.2",
+        "description": "Option and portfolio development along an alternate path (time 0 \u2192 down \u2192 up \u2192 down). Demonstrates different \u03c6 updates and borrowing adjustments yielding a break-even final position when option expires out-of-the-money.",
+        "key_rows": [
+          {
+            "Time": 0,
+            "LastJump": "-",
+            "StockPrice_Si": 100,
+            "OptionValue_Vi": 15,
+            "StockHolding_phi": 0.5,
+            "BondHolding_psi": -35
+          },
+          {
+            "Time": 1,
+            "LastJump": "down",
+            "StockPrice_Si": 80,
+            "OptionValue_Vi": 5,
+            "StockHolding_phi": 0.25,
+            "BondHolding_psi": -15
+          },
+          {
+            "Time": 2,
+            "LastJump": "up",
+            "StockPrice_Si": 100,
+            "OptionValue_Vi": 10,
+            "StockHolding_phi": 0.5,
+            "BondHolding_psi": -40
+          },
+          {
+            "Time": 3,
+            "LastJump": "down",
+            "StockPrice_Si": 80,
+            "OptionValue_Vi": 0,
+            "StockHolding_phi": 0.5,
+            "BondHolding_psi": -40
+          }
+        ],
+        "key_columns": [
+          "Time",
+          "LastJump",
+          "StockPrice_Si",
+          "OptionValue_Vi",
+          "StockHolding_phi",
+          "BondHolding_psi"
+        ]
+      }
+    ]
+  },
+  {
+    "chunk_summary": "Pages 19-20 present the conclusion and a compact summary of the binomial-tree pricing framework. Key conclusions: at each tree node the derivative has a unique arbitrage-free value; the valuation proceeds by defining the claim, computing terminal payoffs, and working backwards via arbitrage (backwards induction) to obtain time-0 value; each local branch has an associated arbitrage (risk\u2011neutral) probability q_j and a local replicating hedge portfolio (\u03c6_j, \u03c8_j); the cost of each local hedge equals a (discounted) expectation and, by linking local construction portfolios across nodes, a global discounted expectation under the measure Q gives the derivative's time\u2011zero value. A summary table collects the principal formulas (q, \u03c6, f_now, \u03c8) and a glossary of symbols (q, r, f, s, \u03c6, B, \u03c8, Q, V, X, \u03b4t, T).",
+    "key_definitions": {
+      "q": "Arbitrage (risk-neutral) probability of an up-jump at a node; used to form discounted expectations for pricing.",
+      "r": "Interest rate over the period (per-step rate used for discounting).",
+      "f": "Claim/derivative value process (time-indexed).",
+      "s": "Stock price process (node-specific stock price).",
+      "\u03c6 (phi)": "Stock holding (replicating) strategy at a node \u2014 the number of stock units used in the local hedge.",
+      "B": "Discount bond (cash bond) price process; conventionally B0 = 1.",
+      "\u03c8 (psi)": "Bond holding (replicating) strategy at a node \u2014 units of bond used in the local hedge.",
+      "Q": "Probability measure constructed from the local q's (risk-neutral measure over tree paths).",
+      "V": "Claim value at time zero (price of the derivative today).",
+      "X": "Claim payoff at expiry (terminal payoff).",
+      "\u03b4t": "Length of one period (time-step) in the binomial tree.",
+      "T": "Time of claim payoff (maturity)."
+    },
+    "theorems": [],
+    "equations": [
+      {
+        "latex": "q = \\dfrac{s_{\\text{now}} - s_{\\text{down}}}{s_{\\text{up}} - s_{\\text{down}}}",
+        "meaning": "Risk-neutral (arbitrage) probability of an up-jump at the current node, chosen so the discounted expectation matches the no-arbitrage asset relation between up and down stock prices.",
+        "intuition": "Selects the weight q so that a one-period expectation (under q) reproduces the correct pricing relationship \u2014 equivalently it makes the local discounted stock expectation consistent with absence of arbitrage."
+      },
+      {
+        "latex": "\\phi = \\dfrac{f_{\\text{up}} - f_{\\text{down}}}{s_{\\text{up}} - s_{\\text{down}}}",
+        "meaning": "Number of stock units (delta) in the local replicating portfolio that matches the derivative's up and down payoffs.",
+        "intuition": "This is the slope (finite-difference derivative) of the derivative payoff with respect to the stock between the up and down states \u2014 the standard delta hedge in the two-state local replication."
+      },
+      {
+        "latex": "f_{\\text{now}} = q\\,f_{\\text{up}} + (1-q)\\,f_{\\text{down}}",
+        "meaning": "Price of the derivative at the current node as the (discounted, if a discount factor is applied) expectation of the next-step derivative values under the risk-neutral probability q.",
+        "intuition": "The derivative's current value equals the weighted average of its possible next-period values, with weights given by the arbitrage probabilities; this is the local (one-step) risk-neutral pricing formula."
+      },
+      {
+        "latex": "\\psi = B^{-1}_{\\text{now}}\\left(f_{\\text{now}} - \\phi\\,s_{\\text{now}}\\right)",
+        "meaning": "Number (or value) of bond units to hold in the local replicating portfolio so that combined with \u03c6 units of stock the portfolio replicates the derivative value at the node.",
+        "intuition": "After allocating \u03c6 stock to match the payoff slope, the remainder of the derivative value is financed by borrowing/lending in the bond \u2014 \u03c8 is that bond position (typically found by subtracting the stock contribution from the derivative price and converting to bond units)."
+      },
+      {
+        "latex": "V = \\mathbb{E}_Q\\left[B_T^{-1}\\,X\\right]",
+        "meaning": "Time-zero value of the claim equals the discounted expectation (under the risk-neutral measure Q built from the q's) of the terminal payoff X.",
+        "intuition": "By linking local replication/discounting across the whole tree, the global price is the (pathwise) discounted expected payoff under the risk-neutral probabilities \u2014 the central risk-neutral valuation principle for the binomial model."
+      }
+    ],
+    "figures": [],
+    "tables": [
+      {
+        "id": "Summary_Table_Page_20",
+        "description": "Compact summary table of core local pricing formulas and a glossary of symbols used in the binomial-tree model (q, \u03c6, local pricing, \u03c8, and the global valuation formula).",
+        "key_rows": [
+          {
+            "row_label": "q (arbitrage up-probability)",
+            "content": "q = (s_now - s_down) / (s_up - s_down)"
+          },
+          {
+            "row_label": "\u03c6 (stock holding)",
+            "content": "\u03c6 = (f_up - f_down) / (s_up - s_down)"
+          },
+          {
+            "row_label": "Local pricing",
+            "content": "f_now = q f_up + (1-q) f_down"
+          },
+          {
+            "row_label": "\u03c8 (bond holding)",
+            "content": "\u03c8 = B_now^{-1}( f_now - \u03c6 s_now )"
+          },
+          {
+            "row_label": "Global valuation",
+            "content": "V = E_Q[ B_T^{-1} X ]  (time-0 price is the discounted expectation under Q)"
+          }
+        ],
+        "key_columns": [
+          "Formula / Quantity",
+          "Meaning / Usage"
+        ]
+      }
+    ]
+  }
+]

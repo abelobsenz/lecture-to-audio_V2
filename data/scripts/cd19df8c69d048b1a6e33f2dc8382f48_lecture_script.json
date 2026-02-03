@@ -1,0 +1,165 @@
+{
+  "title": "2.4 Overture to Continuous Models",
+  "source_type": "lecture slides (PDF)",
+  "duration_estimate_sec": 900,
+  "chapters": [
+    {
+      "name": "Why discrete models lead us toward continuous time",
+      "narration": "Today we’re building intuition for where continuous-time models, like geometric Brownian motion and Black–Scholes, actually come from. The key idea is simple: if you take a discrete-time stock model and make the time steps smaller and smaller—so trading happens in more and more frequent ‘ticks’—then the distribution of returns starts to look Gaussian, and prices become log-normal.\n\nWe’ll do this in two stages. First, we’ll work under the real-world probability measure, often called P, and show that as the inter-tick time shrinks, log prices converge to a normal distribution. Then we’ll switch to the risk-neutral or martingale measure, Q, where the drift changes to match no-arbitrage pricing. Finally, we’ll see how that log-normal risk-neutral distribution gives the Black–Scholes call price.\n\nThe point is not just to memorize formulas. It’s to understand the bridge: a recombining binomial-style model with very small steps becomes the continuous-time model you already know.\n\n[Pause for five seconds]",
+      "spoken_math": [],
+      "figure_narration": [
+        {
+          "figure_id": "fig_page1",
+          "description": "A title slide reading “Overture to continuous models.” Under the title are bullet points that preview the story: discrete techniques approximate continuous models, the limiting distribution becomes log-normal under both the physical measure P and the risk-neutral measure Q, and this provides a heuristic route to the Black–Scholes formula.",
+          "chart_type": "slide (conceptual bullets)",
+          "axes": null,
+          "trend": null,
+          "significance": "Frames the lecture as a limit argument: start discrete, shrink the time step, and recover the continuous-time assumptions used in Black–Scholes."
+        }
+      ]
+    },
+    {
+      "name": "The discrete model: drift, volatility, and a recombining tree",
+      "narration": "Let’s specify the discrete model carefully. Time advances in increments of delta t—this is our inter-tick time. We’ll treat delta t as small, and later we’ll imagine it going to zero.\n\nThere are three key constants in the stock dynamics: mu, the stock’s growth rate under the real-world measure; sigma, the volatility or noise intensity; and r, the continuously compounded risk-free rate.\n\nThe riskless asset is a cash bond that grows deterministically. In continuous compounding, it’s just exponential growth at rate r.\n\nNow for the stock. At each tick, starting from a current price s, the next price is s multiplied by an exponential factor. There’s a deterministic piece, mu times delta t, plus a random shock that is either plus sigma times square-root delta t, or minus sigma times square-root delta t.\n\nTwo things are doing heavy lifting here. First, the shock scales like square-root delta t, which is exactly the scaling that makes variance grow proportionally to time in the limit. Second, the shocks are symmetric—an up move and a down move of equal magnitude in the exponent—so the tree recombines nicely.\n\nUnder the physical measure P, the simplest case assumes up and down are equally likely: probability one-half each.\n\n[Pause for five seconds]",
+      "spoken_math": [
+        {
+          "latex": "B_t = \\exp(r t)",
+          "spoken": "B sub t equals e to the power r times t.",
+          "intuition": "This is the riskless benchmark: one dollar invested in the bank account grows deterministically at the continuously compounded rate r."
+        },
+        {
+          "latex": "s_{\\text{up}} = s \\exp(\\mu\\,\\delta t + \\sigma\\sqrt{\\delta t}), \\quad s_{\\text{down}} = s \\exp(\\mu\\,\\delta t - \\sigma\\sqrt{\\delta t})",
+          "spoken": "The up price equals s times e to the power mu delta t plus sigma square-root delta t. The down price equals s times e to the power mu delta t minus sigma square-root delta t.",
+          "intuition": "Think of mu delta t as the tiny deterministic growth over the tick, and plus-or-minus sigma square-root delta t as a symmetric random shock whose size shrinks with the time step but accumulates over many ticks."
+        },
+        {
+          "latex": "p = \\tfrac{1}{2}",
+          "spoken": "p equals one half.",
+          "intuition": "Under the real-world measure in this simplified setup, up and down moves are equally likely."
+        }
+      ],
+      "figure_narration": [
+        {
+          "figure_id": "fig_page2",
+          "description": "A slide titled “Model with constant stock growth and noise.” It lists the parameters delta t, sigma, mu, and r. It shows the cash bond formula as an exponential in r and t. It then shows the one-step stock update: from s the price jumps to an ‘up’ value with exponent mu delta t plus sigma square-root delta t, or to a ‘down’ value with exponent mu delta t minus sigma square-root delta t. It also states that the up probability p is one-half.",
+          "chart_type": "slide (model specification)",
+          "axes": null,
+          "trend": null,
+          "significance": "This is the discrete-time engine we will push to the continuous-time limit; the square-root-of-time scaling in the shock term is what will produce Gaussian log-returns."
+        }
+      ]
+    },
+    {
+      "name": "Taking the limit under the physical measure P: CLT and log-normal prices",
+      "narration": "Now we fix a time horizon t—say one year—and we ask what happens when delta t becomes very small. If each tick is delta t, then the number of ticks in horizon t is n equals t over delta t.\n\nOver those n ticks, the stock experiences a sequence of up and down shocks. Let X sub n be the number of up moves. Under P, X sub n is binomial with n trials and success probability one-half.\n\nThe clever step is to rewrite the terminal stock price in terms of X sub n. Every up move contributes plus sigma square-root delta t in the exponent; every down move contributes minus sigma square-root delta t. So the net random contribution depends on how many more ups than downs you got, which is two X sub n minus n.\n\nWhen you normalize that net count by square-root n, you get a quantity with mean zero and variance one. And that’s exactly the setup for the Central Limit Theorem: as n goes to infinity, that normalized variable converges in distribution to a standard normal.\n\nOnce you plug that back into the expression for the stock price, you see that log S sub t becomes approximately normal, with mean log S sub zero plus mu times t, and variance sigma squared times t. That means S sub t is approximately log-normal.\n\nSo even before we talk about no-arbitrage or risk-neutral measures, the discrete model already explains why log-normal marginals are a natural outcome of many small multiplicative shocks.\n\n[Pause for five seconds]",
+      "spoken_math": [
+        {
+          "latex": "n = t/\\delta t, \\quad X_n = \\text{number of up-jumps in } n \\text{ steps}",
+          "spoken": "n equals t divided by delta t. X sub n is the number of up jumps in n steps.",
+          "intuition": "We translate a fixed horizon into a count of many small ticks, and then summarize the randomness by counting how many ups occur."
+        },
+        {
+          "latex": "S_t = S_0 \\exp\\Big(\\mu t + \\sigma\\sqrt{t}\\;\\frac{2X_n - n}{\\sqrt{n}}\\Big)",
+          "spoken": "S sub t equals S sub zero times e to the power mu t plus sigma square-root t times the quantity two X sub n minus n, all divided by square-root n.",
+          "intuition": "This separates the deterministic drift mu t from the aggregated randomness, which is a standardized net-up-moves term scaled by sigma square-root t."
+        },
+        {
+          "latex": "\\mathbb{E}[X_n] = n/2, \\quad \\operatorname{Var}(X_n) = n/4, \\quad \\Rightarrow \\frac{2X_n - n}{\\sqrt{n}} \\text{ has mean }0\\text{ and variance }1",
+          "spoken": "The expected value of X sub n is n over 2, and the variance of X sub n is n over 4. Therefore, two X sub n minus n, divided by square-root n, has mean zero and variance one.",
+          "intuition": "This normalization is exactly what you need for the Central Limit Theorem to produce a standard normal limit."
+        },
+        {
+          "latex": "\\log S_t \\xrightarrow[]{d} \\mathcal{N}(\\log S_0 + \\mu t,\\;\\sigma^2 t)",
+          "spoken": "Log S sub t converges in distribution to a normal random variable with mean log S sub zero plus mu t, and variance sigma squared t.",
+          "intuition": "As ticks get finer, the sum of many tiny independent shocks becomes Gaussian, so prices become log-normal at fixed horizons."
+        }
+      ],
+      "figure_narration": [
+        {
+          "figure_id": "fig_page3",
+          "description": "A slide continuing the model derivation. It introduces n equals t over delta t and defines X sub n as the number of up moves. It rewrites S sub t in terms of X sub n, then lists the binomial mean n over 2 and variance n over 4. It highlights the standardized variable, two X sub n minus n over square-root n, and invokes the Central Limit Theorem to conclude it converges to a standard normal, yielding that log S sub t approaches a normal distribution and S sub t becomes log-normal.",
+          "chart_type": "slide (derivation steps)",
+          "axes": null,
+          "trend": null,
+          "significance": "This is the discrete-to-continuous bridge: binomial counting plus CLT produces normal log-returns, which is the defining feature behind continuous-time log-normal models."
+        }
+      ]
+    },
+    {
+      "name": "Switching to the martingale measure Q: risk-neutral drift and log-normality",
+      "narration": "So far we’ve worked under P, the physical measure, where mu is the real drift. But for pricing, we need the no-arbitrage measure Q—the one under which discounted asset prices are martingales.\n\nIn a one-step binomial model, switching to Q means changing the up probability from one-half to some q chosen so that the expected next stock price, discounted by the bond growth, matches today’s price.\n\nConcretely, we pick q so that the current price equals the discounted expected next price. When you solve that equation, you get an explicit formula for q in terms of the up and down multipliers and the risk-free rate.\n\nWhen delta t is small, q is close to one-half, but shifted slightly. The size of the shift is proportional to square-root delta t, and the direction depends on how the physical drift compares to the risk-free rate, with the usual volatility scaling.\n\nUnder Q, the number of up moves X sub n is still binomial, but now with success probability q. That changes the mean of the normalized statistic, while the variance still approaches one in the limit.\n\nApplying the Central Limit Theorem again, the normalized net-up-moves converges to a normal variable, but now with a nonzero mean. When you plug this into the expression for S sub t, the drift becomes the risk-neutral one.\n\nThe final continuous-time-looking representation is the familiar one: S sub t equals S sub zero times an exponential of a Gaussian term sigma square-root t times Z, plus a deterministic term involving r minus one-half sigma squared.\n\nThis is exactly the marginal distribution implied by geometric Brownian motion under Q, and it is the distribution used in Black–Scholes pricing.\n\n[Pause for five seconds]",
+      "spoken_math": [
+        {
+          "latex": "q = \\frac{s\\,e^{r\\,\\delta t} - s_{down}}{s_{up} - s_{down}}",
+          "spoken": "q equals s times e to the power r delta t minus s down, all divided by s up minus s down.",
+          "intuition": "This chooses the up probability so that, under Q, the discounted expected next stock price equals the current price—removing arbitrage."
+        },
+        {
+          "latex": "q \\approx \\tfrac{1}{2}\\left(1 - \\sqrt{\\delta t}\\,\\frac{\\mu + \\tfrac{1}{2}\\sigma^2 - r}{\\sigma}\\right)",
+          "spoken": "q is approximately one half times the quantity: one minus square-root delta t times the fraction mu plus one half sigma squared minus r, all over sigma.",
+          "intuition": "For very small time steps, risk-neutral probabilities differ only slightly from one half; the adjustment reflects how much the physical drift exceeds the risk-free drift once you account for the log-normal correction."
+        },
+        {
+          "latex": "\\frac{2X_n - n}{\\sqrt{n}} \\xrightarrow{d} N\\Big(-\\sqrt{t}\\,\\frac{\\mu + \\tfrac{1}{2}\\sigma^2 - r}{\\sigma},\\ 1\\Big) \\quad\\text{under }Q",
+          "spoken": "Two X sub n minus n, divided by square-root n, converges in distribution to a normal random variable with mean negative square-root t times the fraction mu plus one half sigma squared minus r, all over sigma, and variance one, under Q.",
+          "intuition": "Changing measure shifts the mean of the aggregate shock so that the discounted stock becomes a martingale, while the diffusion-scale randomness remains."
+        },
+        {
+          "latex": "S_t = S_0\\exp\\big(\\sigma\\sqrt{t}\\,Z + (r - \\tfrac{1}{2}\\sigma^2)t\\big),\\quad Z\\sim N(0,1)\\ \\text{(under Q)}",
+          "spoken": "S sub t equals S sub zero times e to the power sigma square-root t times Z plus the quantity r minus one half sigma squared, times t. Here Z is standard normal under Q.",
+          "intuition": "Under risk-neutral pricing, randomness is still Gaussian in log space, but the drift is pinned down by the risk-free rate, producing the classic log-normal risk-neutral distribution."
+        }
+      ],
+      "figure_narration": [
+        {
+          "figure_id": "fig4",
+          "description": "A slide titled “Under the martingale measure.” It shows the exact one-step risk-neutral up probability q as a fraction involving s times e to the r delta t, the down price, and the up-minus-down spread. It also provides a small-delta-t approximation for q. The slide notes that under Q, X sub n is binomial with mean n q and variance n q times one minus q.",
+          "chart_type": "slide (formula and approximation)",
+          "axes": null,
+          "trend": null,
+          "significance": "This is where no-arbitrage enters: q is engineered so discounted prices are martingales, setting up the risk-neutral distribution used for pricing."
+        },
+        {
+          "figure_id": "fig5",
+          "description": "A slide titled “Under the martingale measure, continued.” It states the asymptotic mean and variance of the normalized statistic two X sub n minus n over square-root n under Q, then invokes the Central Limit Theorem. It culminates in the limiting log-normal form for S sub t under Q: S sub t equals S sub zero times an exponential with sigma square-root t times a standard normal Z plus drift term r minus one-half sigma squared times t.",
+          "chart_type": "slide (limit result under Q)",
+          "axes": null,
+          "trend": null,
+          "significance": "This recovers the risk-neutral log-normal law: volatility scales like square-root time and the drift is tied to r, aligning the discrete model with Black–Scholes assumptions."
+        }
+      ]
+    },
+    {
+      "name": "Pricing a European call: discounted Q-expectation and Black–Scholes",
+      "narration": "With the risk-neutral distribution in hand, pricing becomes conceptually straightforward. A European call with strike k and maturity T pays the positive part of S sub T minus k.\n\nThe no-arbitrage price at time zero is the expected discounted payoff under Q: you take the payoff at time T, divide by the bond value at time T, and take the Q-expectation.\n\nBecause under Q we have an explicit log-normal form for S sub T, we can rewrite the payoff in terms of a standard normal variable Z. Evaluating that expectation leads to the closed-form Black–Scholes formula.\n\nThe final expression has two terms: S sub zero times Phi of d one, minus k times e to the minus r T times Phi of d two. Here Phi is the standard normal cumulative distribution function, and d one and d two are the usual standardized quantities built from log moneyness, interest rate, volatility, and time.\n\nSo the big picture is: discrete recombining shocks plus the Central Limit Theorem give a log-normal limit; changing to Q pins the drift to the risk-free rate; and integrating the discounted payoff under that log-normal distribution yields Black–Scholes.\n\n[Pause for five seconds]",
+      "spoken_math": [
+        {
+          "latex": "X = (S_T - k)^+",
+          "spoken": "The payoff X equals the positive part of S sub T minus k.",
+          "intuition": "A call option pays only if the stock finishes above the strike; otherwise it pays zero."
+        },
+        {
+          "latex": "C_0 = E_Q\\big[B_T^{-1}(S_T - k)^+\\big] = S_0\\Phi(d_1) - k e^{-rT}\\Phi(d_2)",
+          "spoken": "C zero equals the Q-expectation of one over B sub T times the positive part of S sub T minus k. This equals S sub zero times Phi of d one minus k times e to the minus r T times Phi of d two.",
+          "intuition": "Risk-neutral pricing says: discount at the risk-free rate and average under Q. The normal CDF terms arise from integrating a payoff against a log-normal distribution."
+        },
+        {
+          "latex": "d_1 = \\dfrac{\\ln(S_0/k) + (r + \\tfrac{1}{2}\\sigma^2)T}{\\sigma\\sqrt{T}}, \\quad d_2 = d_1 - \\sigma\\sqrt{T}",
+          "spoken": "d one equals the natural log of S zero over k plus the quantity r plus one half sigma squared, times T, all divided by sigma square-root T. d two equals d one minus sigma square-root T.",
+          "intuition": "d one and d two are standardized distances to the strike under the risk-neutral log-normal model; they convert price levels into standard normal units."
+        }
+      ],
+      "figure_narration": [
+        {
+          "figure_id": "fig6",
+          "description": "A slide titled “Pricing a call option.” It defines the call payoff as the positive part of S sub T minus k. It writes the time-zero price as the Q-expectation of the discounted payoff using the bond B sub T. It then presents the Black–Scholes closed form, with Phi as the standard normal CDF and definitions of d one and d two.",
+          "chart_type": "slide (pricing formula)",
+          "axes": null,
+          "trend": null,
+          "significance": "This slide completes the pipeline: once the risk-neutral log-normal distribution is established, the call price is just a discounted expectation that evaluates to Black–Scholes."
+        }
+      ]
+    }
+  ],
+  "final_recap": "We started with a discrete-time multiplicative stock model with inter-tick time delta t, drift mu, and volatility sigma, plus a riskless bond growing at rate r. Writing the terminal stock price in terms of the binomial up-count X sub n and applying the Central Limit Theorem showed that as delta t goes to zero, log prices become normal and prices become log-normal under the physical measure P. We then switched to the martingale measure Q by choosing a risk-neutral up probability q so discounted stock prices are martingales; in the same limit this produces the familiar risk-neutral log-normal form with drift r minus one-half sigma squared. Finally, using risk-neutral valuation, the European call price is the discounted Q-expectation of the payoff, which evaluates to the Black–Scholes formula with Phi of d one and Phi of d two."
+}

@@ -1,0 +1,281 @@
+{
+  "title": "2.3 Binomial Representation Theorem",
+  "source_type": "pdf",
+  "duration_estimate_sec": 2400,
+  "chapters": [
+    {
+      "name": "1) Setting the stage: binomial trees, processes, and measures",
+      "narration": "Today we build up to the Binomial Representation Theorem, which is the key mathematical engine behind replication and no‑arbitrage pricing in the binomial model.\n\nWe start with the binomial tree itself. Think of time moving in discrete ticks, and at each tick the stock can move to one of two next nodes: an “up” node or a “down” node. The entire assignment of stock prices to every node on the tree is what we call the stock price process, S.\n\nAt each time i, the random variable S_i means: along the path that actually happens, what stock value do we see at time i? So S_0 is the root price, S_1 is whichever value we land on after the first step, and so on.\n\nTo talk about expectations, we must decide how likely each branch is. That decision is encoded by a probability measure on the tree. We might call it P when we mean a “real‑world” or simple example, and Q when we mean an alternative measure—especially the one that will later make discounted prices into martingales.\n\nA small but important technical point: we typically assume branch probabilities are strictly between zero and one. That ensures both up and down moves can occur and the model is non-degenerate.\n\nWe’ll use these ingredients—tree, process S, and a measure P or Q—to compute conditional expectations, define martingales, and ultimately represent any martingale in terms of stock increments.\n\n[pause 5 seconds]\n\nNow that the geometry and probability setup are in place, we need a precise way to formalize “what is known at time i.” That’s the filtration, and it’s our next step.",
+      "spoken_math": [
+        {
+          "latex": "q_j \\in (0,1)",
+          "spoken": "Each branch probability q sub j lies strictly between zero and one.",
+          "intuition": "Both directions of the binomial move remain possible; no branch is ruled out and nothing is certain."
+        },
+        {
+          "latex": "S_i",
+          "spoken": "S sub i is the stock price random variable at discrete time i.",
+          "intuition": "At time i the stock price depends on which path you took through the tree, so it’s naturally a random variable."
+        },
+        {
+          "latex": "\\text{Measure }\\mathbb{P}\\text{ or }\\mathbb{Q}",
+          "spoken": "We work under a probability measure P or under a probability measure Q, meaning we assign probabilities to branches using P or using Q.",
+          "intuition": "Changing the measure changes how we weight branches when we take expectations, which is central for pricing."
+        }
+      ],
+      "figure_narration": [
+        {
+          "figure_id": "Figure 2.8",
+          "description": "A two-step recombining binomial tree drawn left to right. On the far left at time 0 there is a single root node labeled 1. At time 1 there are two nodes, one above and one below, labeled 3 (up) and 2 (down). At time 2 there are four terminal nodes arranged vertically, labeled 7 and 6 coming from the upper node, and 5 and 4 coming from the lower node. Lines connect each node to its two children, showing the up and down branches.",
+          "chart_type": "tree diagram",
+          "axes": "Horizontal axis: discrete time ticks 0, 1, 2. Vertical placement: separate nodes (no numeric units).",
+          "trend": "Each nonterminal node splits into two branches; the structure recombines by time but still yields four terminal nodes at time 2.",
+          "significance": "This is the state-space on which all random variables, filtrations, and conditional expectations are defined."
+        },
+        {
+          "figure_id": "Figure 2.9",
+          "description": "The same two-step tree, but now each node contains a stock price. At time 0 the root shows 80. At time 1 the upper node shows 120 and the lower node shows 60. At time 2 there are four terminal prices: from 120 the tree goes to 180 (upper terminal) and 80 (lower terminal); from 60 it goes to 72 (upper terminal) and 36 (lower terminal).",
+          "chart_type": "price tree",
+          "axes": "Horizontal axis: time 0, 1, 2 in ticks. Node labels: stock price in currency units.",
+          "trend": "Up moves increase the price relative to the parent node; down moves decrease it. Terminal outcomes span from 36 up to 180, showing the range of uncertainty after two steps.",
+          "significance": "This concrete numerical tree will be reused to compute expectations, conditional expectations, and martingale checks."
+        },
+        {
+          "figure_id": "Figure 2.10a",
+          "description": "A probability-annotated tree matching the two-step structure. Every branch, at every node, is labeled with probability one-half. The up and down branches out of the root each have 1/2, and similarly at time 1 each outgoing branch has 1/2.",
+          "chart_type": "probability tree",
+          "axes": "Horizontal axis: time ticks. Branch labels: probabilities (unitless).",
+          "trend": "Uniform branching: each split is symmetric, so paths with the same number of up and down moves have the same probability.",
+          "significance": "This is the simplest benchmark measure for computing averages and conditional expectations."
+        },
+        {
+          "figure_id": "Figure 2.10b",
+          "description": "A probability-annotated tree where branch probabilities differ by node. At the root, the up branch is labeled 1/3 and the down branch 2/3. At time 1, the outgoing probabilities are again non-uniform—fractions like 2/5 and 3/5 appear—so the likelihood of an up move depends on where you are in the tree.",
+          "chart_type": "probability tree",
+          "axes": "Horizontal axis: time ticks. Branch labels: probabilities (unitless).",
+          "trend": "Asymmetric conditional probabilities: some up moves are less likely than down moves, and these weights vary across nodes.",
+          "significance": "This illustrates that we can choose a different measure Q to enforce martingale properties—crucial for arbitrage-free pricing."
+        }
+      ]
+    },
+    {
+      "name": "2) Filtrations, claims, and conditional expectation on the tree",
+      "narration": "To do pricing and hedging, we need a language for information over time.\n\nA filtration, written F_i, is the history up to time i. In a recombining binomial tree, that history uniquely identifies which node you are at—because there is only one path into each node. So you can think of F_i as “the information we have at time i,” and in this model it pins down the current node.\n\nNext, what is a claim? A claim X is just a random variable defined at a maturity date T. So it assigns a number to each terminal node. Classic examples are: the terminal stock price S_T; a call payoff, which is the positive part of S_T minus a strike; or a path-dependent payoff like the maximum stock value seen up to maturity.\n\nOnce we pick a probability measure, we can define conditional expectation. The object E under Q of X given F_i is the Q-weighted average of X over the future continuations that are still possible given the current node.\n\nIt helps to see this numerically. Under the simple measure P with one-half probabilities, the unconditional expectation of S_2 at time 0 is the average of the four terminal stock values. But once you condition on which node you reached at time 1, only two terminal nodes remain possible, so you average only those two.\n\nFinally, if you condition on F_2—meaning you already know the terminal node—then the conditional expectation of S_2 is just S_2 itself. There’s no uncertainty left.\n\n[pause 5 seconds]\n\nNow we’ll take this conditional expectation operator and apply it at every time. That produces a process—one that will turn out to be a martingale automatically.",
+      "spoken_math": [
+        {
+          "latex": "F_0 = \\{1\\}",
+          "spoken": "F zero is the set containing just node 1.",
+          "intuition": "At time zero, the only information is that we are at the root."
+        },
+        {
+          "latex": "F_1 = \\{1,2\\} \\quad \\text{or} \\quad F_1 = \\{1,3\\}",
+          "spoken": "At time one, the history is either the path from node 1 to node 2, or the path from node 1 to node 3.",
+          "intuition": "After one tick we know whether we went down or up, and that history identifies the time-one node."
+        },
+        {
+          "latex": "X \\;\\text{is a function of } F_T",
+          "spoken": "A claim X is determined by the information at time T, meaning it is a function of F sub T.",
+          "intuition": "Payoffs are specified at maturity; once you know the terminal node, you know the payoff."
+        },
+        {
+          "latex": "\\mathbb{E}_{Q}[X\\mid F_i]",
+          "spoken": "The conditional expectation under Q of X given F sub i.",
+          "intuition": "It is the Q-weighted forecast of the payoff using only time-i information."
+        },
+        {
+          "latex": "\\mathbb{E}_{P}(S_2\\mid F_0)=\\frac{180+80+72+36}{4}=92",
+          "spoken": "Under P, the expectation of S two given F zero equals one quarter times the sum 180 plus 80 plus 72 plus 36, which equals 92.",
+          "intuition": "With equal path probabilities, the unconditional expectation is the simple average of terminal values."
+        },
+        {
+          "latex": "\\mathbb{E}_{P}(S_2\\mid F_1=\\{1,3\\})=\\tfrac{1}{2}(180+80)=130",
+          "spoken": "Under P, the expectation of S two given that time one history is the up branch equals one half times 180 plus 80, which is 130.",
+          "intuition": "Conditioning on the up node leaves only two terminal outcomes, equally likely under P."
+        },
+        {
+          "latex": "\\mathbb{E}_{P}(S_2\\mid F_1=\\{1,2\\})=\\tfrac{1}{2}(72+36)=54",
+          "spoken": "Under P, the expectation of S two given that time one history is the down branch equals one half times 72 plus 36, which is 54.",
+          "intuition": "Conditioning on the down node leaves the two lower terminal outcomes."
+        },
+        {
+          "latex": "\\mathbb{E}_{P}(S_2\\mid F_2)=S_2",
+          "spoken": "The expectation of S two given F two equals S two.",
+          "intuition": "At maturity you know the realized terminal value, so the best forecast is the value itself."
+        }
+      ],
+      "figure_narration": []
+    },
+    {
+      "name": "3) From a claim to a process: conditional expectation as a martingale",
+      "narration": "A claim is defined only at maturity, but many ideas in finance—hedging, replication, pricing—require processes defined at every time.\n\nHere is the standard construction: take your terminal claim X, and define a time-indexed process E_i by taking conditional expectations of X given the time-i information. So at each node, E_i is the expected value of X, using only what is known up to that node.\n\nIn the example where X is S_2 under the equal-probability measure P, we get a root value at time 0, then two values at time 1—one for the up node and one for the down node—and at time 2 the process equals the realized S_2 values.\n\nThis construction is not just convenient; it has a deep property: the conditional-expectation process is automatically a martingale under the same measure used to take expectations. Informally, it has no predictable drift, because it already is the best forecast at every step.\n\nThis brings us directly to the tower law. If you first condition on a later time j and then condition again on an earlier time i, you get the same result as conditioning directly on time i. That collapse of nested conditioning is exactly what makes the conditional-expectation process a martingale.\n\n[pause 5 seconds]\n\nWe’re now ready to introduce a second concept that is essential for trading strategies: previsible processes. Martingales describe “no drift,” while previsibility describes “decisions made before the move.”",
+      "spoken_math": [
+        {
+          "latex": "E_i:=E_{\\mathbb{Q}}[X\\mid\\mathcal{F}_i],\\quad i=0,1,\\dots",
+          "spoken": "Define E sub i as the conditional expectation under Q of X given F sub i, for i equals zero, one, and so on.",
+          "intuition": "E is the evolving forecast of the terminal payoff as information arrives."
+        },
+        {
+          "latex": "E_P\\big(E_P(X \\mid F_j) \\mid F_i\\big) = E_P(X \\mid F_i),\\quad i\\le j",
+          "spoken": "The expectation under P of the conditional expectation of X given F sub j, conditioned again on F sub i, equals the conditional expectation of X given F sub i, whenever i is at most j.",
+          "intuition": "Conditioning on more information and then forgetting it takes you back to the earlier-information forecast."
+        },
+        {
+          "latex": "E_P\\big(N_1 \\mid F_0\\big) = \\tfrac{1}{2}(130) + \\tfrac{1}{2}(54) = 92",
+          "spoken": "The expectation under P of N one given F zero equals one half times 130 plus one half times 54, which equals 92.",
+          "intuition": "The time-zero value equals the expected time-one value, which is the martingale check in this example."
+        }
+      ],
+      "figure_narration": [
+        {
+          "figure_id": "Figure 2.11",
+          "description": "A two-step tree labeled not with stock prices at every node, but with the conditional-expectation process for the terminal value S_2 under the equal-branch measure. At time 0, the root node is labeled 92. At time 1, the upper node is labeled 130 and the lower node is labeled 54. At time 2, the four leaves are labeled 180 and 80 on the upper branch, and 72 and 36 on the lower branch. The layout visually shows a single number at time 0 splitting into two conditional averages at time 1, then resolving into realized terminal outcomes at time 2.",
+          "chart_type": "tree diagram",
+          "axes": "Horizontal axis: time ticks 0, 1, 2. Vertical direction: branching; node labels are monetary units.",
+          "trend": "The expectation at time 0 equals the probability-weighted average of the two time-1 expectations; then each time-1 expectation equals the average of its two reachable terminal outcomes.",
+          "significance": "This is the key visual for ‘a claim becomes a martingale process’ by conditioning on the filtration."
+        }
+      ]
+    },
+    {
+      "name": "4) Previsible processes and martingales: roles and differences",
+      "narration": "A martingale is about how a process evolves in expectation; previsibility is about when decisions are made.\n\nA process phi is called previsible—also called predictable—if at time i its value is determined using only information available at time i minus 1. In the binomial model, that means you choose phi_i before the i-th price move occurs.\n\nThis is exactly the property we need for trading strategies: you must choose your position before observing the next up or down move.\n\nIt’s important not to confuse previsibility with the martingale property. A previsible process can be completely deterministic or depend on the past, but it does not have to be a martingale. Conversely, a martingale does not have to be previsible.\n\nA simple example of a previsible process is the bond value B_i in many discrete-time setups: it’s typically known in advance. Another example is the delayed stock price process where at time i you use S_{i-1}. That is previsible because it only depends on the prior tick.\n\n[pause 5 seconds]\n\nWith previsibility in hand, we now formalize martingales and then move toward the key representation result: under a suitable measure Q, we can express any martingale as a sum of predictable multiples of stock increments.",
+      "spoken_math": [
+        {
+          "latex": "\\phi_i\\ \\text{is }\\mathcal{F}_{i-1}\\text{-measurable}",
+          "spoken": "Phi sub i is measurable with respect to F sub i minus one.",
+          "intuition": "Phi at time i is decided using yesterday’s information, not today’s coin flip."
+        },
+        {
+          "latex": "E_{\\mathbb{P}}\\left[S_j\\mid\\mathcal{F}_i\\right]=S_i,\\quad\\forall\\ i\\le j",
+          "spoken": "A process S is a martingale under P if for every i less than or equal to j, the conditional expectation under P of S sub j given F sub i equals S sub i.",
+          "intuition": "Given today’s information, the best forecast of the future value is the current value—no drift."
+        }
+      ],
+      "figure_narration": [
+        {
+          "figure_id": "Figure 2.12",
+          "description": "A tree diagram illustrating the delayed price process. At each time i, instead of splitting immediately when the stock splits, the process value displayed at time i is copied from the stock value at time i minus 1. So at time 1, both the upper and lower nodes show the same value equal to S_0. At time 2, nodes that share the same time-1 parent share the same displayed value equal to that parent’s stock price.",
+          "chart_type": "tree diagram",
+          "axes": "Horizontal axis: time ticks. Node labels: delayed values in currency units.",
+          "trend": "Values do not react contemporaneously to the branch; they only update one step later, so identical labels appear across sibling nodes at the same time.",
+          "significance": "This is the clearest picture of previsibility: positions are locked in before the random move happens."
+        }
+      ]
+    },
+    {
+      "name": "5) Martingale measures and the Binomial Representation Theorem (statement and intuition)",
+      "narration": "In pricing, the special measure is the one under which discounted asset prices are martingales. We call such a measure a martingale measure, and we usually denote it by Q.\n\nOn a binomial tree, choosing Q amounts to choosing conditional branch probabilities at each node so that the martingale condition holds locally: the parent value equals the Q-weighted average of the child values.\n\nNow here is the central theorem of the chapter: the Binomial Representation Theorem.\n\nIt says: assume Q is chosen so that the stock process S is a Q-martingale—typically this is stated for the discounted stock, but the algebraic structure is the same. Then take any other Q-martingale N on the same tree. The theorem guarantees we can write N as its initial value plus a cumulative sum of predictable multiples of the stock increments.\n\nIn words: the only randomness in a binomial model is the up/down move each step. If both S and N have zero conditional drift under the same measure, then at each step the increment of N must be aligned with the increment of S, up to a predictable scaling factor.\n\nThat scaling factor is a previsible process phi: it is chosen using only the information at the previous time step. Financially, that is exactly the “number of shares of stock” you hold over the next period.\n\n[pause 5 seconds]\n\nNext we’ll prove the theorem using a single-branch argument. The key trick is to allow for an additive offset, and then use the martingale property plus previsibility to force that offset to be zero.",
+      "spoken_math": [
+        {
+          "latex": "E_{\\mathbb{Q}}\\left[S_1\\mid\\mathcal{F}_0\\right]=\\tfrac{1}{3}\\cdot120+\\tfrac{2}{3}\\cdot60=80",
+          "spoken": "Under Q, the expectation of S one given F zero equals one third times 120 plus two thirds times 60, which equals 80.",
+          "intuition": "These Q probabilities are chosen so the expected next-step price equals today’s price—exactly the martingale condition."
+        },
+        {
+          "latex": "N_i = N_0 + \\sum_{k=1}^i \\phi_k\\,\\Delta S_k",
+          "spoken": "N sub i equals N sub zero plus the sum from k equals one to i of phi sub k times delta S sub k, where delta S sub k is the one-step change in S at step k.",
+          "intuition": "N is built by accumulating trading gains: hold phi shares, earn phi times the stock move, and add these up over time."
+        },
+        {
+          "latex": "\\Delta S_k := S_k - S_{k-1}",
+          "spoken": "Delta S sub k is defined as S sub k minus S sub k minus one.",
+          "intuition": "This is the one-step stock increment—the basic building block of all changes in the tree."
+        }
+      ],
+      "figure_narration": [
+        {
+          "figure_id": "Figure 2.10b",
+          "description": "A two-step probability tree under Q where each branch is annotated with non-equal fractions. At the root, the up branch has probability 1/3 and the down branch 2/3. From each time-1 node, the probabilities to its two children are again shown as fractions, chosen so that at each node the expected next value of the stock under Q equals the current node’s stock value.",
+          "chart_type": "probability tree",
+          "axes": "Horizontal axis: time ticks 0, 1, 2. Branch labels: conditional probabilities (unitless).",
+          "trend": "Probabilities vary by node and are selected to enforce local martingale equalities: parent equals weighted average of children.",
+          "significance": "This is the operational meaning of a martingale measure in the binomial world: you pick local transition probabilities to remove drift."
+        }
+      ]
+    },
+    {
+      "name": "6) Proof idea: the one-branch geometry and eliminating the offset",
+      "narration": "To prove the Binomial Representation Theorem, we zoom in on a single time step.\n\nFix a node at time i minus 1. From that node the tree splits into exactly two children at time i: an up child and a down child.\n\nLook at the stock S on this branch. It has two possible next values, s up and s down. The increment over the step is Delta S_i, and the up-down “width” of the branch is the difference s up minus s down.\n\nNow take another Q-martingale N. On the same branch it has values n up and n down. It also has an increment Delta N_i and a branch width n up minus n down.\n\nBecause both branches are two-point objects, we can match widths by defining a scalar phi_i as the ratio of N’s width to S’s width. Crucially, this ratio is determined at time i minus 1: once you know the current node, you know the two children’s labels for S and for N, so you can compute the ratio before the next move is realized. That makes phi_i previsible.\n\nAt this point we write a general decomposition for the increment: Delta N_i equals phi_i times Delta S_i plus a leftover term k. We allow k to depend on the current node, so k is also known at time i minus 1.\n\nNow we take conditional expectations given F_{i-1}. Because N is a Q-martingale, the conditional expectation of Delta N_i is zero. Because S is a Q-martingale, the conditional expectation of Delta S_i is zero. And because phi_i is previsible, phi_i can be treated as known when conditioning on F_{i-1}.\n\nThat forces the conditional expectation of phi_i times Delta S_i to be zero as well. Therefore the only way the equation can have zero conditional expectation is if the offset k equals zero.\n\nSo locally, on every branch, Delta N_i equals phi_i times Delta S_i. Summing these local relations over time gives the global representation N_i equals N_0 plus the sum over k of phi_k Delta S_k.\n\n[pause 5 seconds]\n\nWith the theorem proven, the final step is to translate it into finance: discounting with the bond, building a self-financing portfolio, and arriving at the risk-neutral pricing formula.",
+      "spoken_math": [
+        {
+          "latex": "\\delta s_i = s_{\\text{up}} - s_{\\text{down}}, \\qquad \\delta n_i = n_{\\text{up}} - n_{\\text{down}}",
+          "spoken": "Define delta s sub i as s up minus s down, and delta n sub i as n up minus n down.",
+          "intuition": "These are the branch widths—how far each process can move over that step."
+        },
+        {
+          "latex": "\\phi_i = \\frac{\\delta n_i}{\\delta s_i}",
+          "spoken": "Phi sub i equals delta n sub i divided by delta s sub i.",
+          "intuition": "Choose phi so the size of N’s up-versus-down move matches phi times the size of S’s up-versus-down move."
+        },
+        {
+          "latex": "\\Delta N_i = \\phi_i\\,\\Delta S_i + k",
+          "spoken": "Delta N sub i equals phi sub i times delta S sub i, plus an offset k.",
+          "intuition": "We decompose N’s increment into a part explained by trading in S and a leftover; then we show the leftover must vanish."
+        },
+        {
+          "latex": "\\mathbb{E}_Q[\\Delta N_i\\mid\\mathcal{F}_{i-1}] = 0,\\qquad \\mathbb{E}_Q[\\Delta S_i\\mid\\mathcal{F}_{i-1}] = 0",
+          "spoken": "Under Q, the conditional expectation of delta N sub i given F sub i minus one is zero, and similarly the conditional expectation of delta S sub i given F sub i minus one is zero.",
+          "intuition": "Martingales have zero conditional drift: expected one-step changes are zero given current information."
+        },
+        {
+          "latex": "0 = \\mathbb{E}_Q[\\Delta N_i\\mid\\mathcal{F}_{i-1}] = \\mathbb{E}_Q[\\phi_i\\Delta S_i + k\\mid\\mathcal{F}_{i-1}] = 0 + k \\;\\Rightarrow\\; k = 0",
+          "spoken": "Conditioning on F sub i minus one gives: zero equals the conditional expectation of phi sub i delta S sub i plus k, which becomes zero plus k, so k must equal zero.",
+          "intuition": "If both processes are martingales and phi is chosen predictably, there is no room for an extra predictable offset."
+        },
+        {
+          "latex": "\\Delta N_i = \\phi_i\\,\\Delta S_i",
+          "spoken": "Therefore delta N sub i equals phi sub i times delta S sub i.",
+          "intuition": "Locally, holding phi shares of the stock replicates the martingale’s one-step change."
+        }
+      ],
+      "figure_narration": [
+        {
+          "figure_id": "Figure 2.13",
+          "description": "A side-by-side sketch of one time step from time i minus 1 to time i. On the left is the stock branch: a single node labeled s now splits into two nodes labeled s up (upper) and s down (lower). On the right is the N branch: a single node labeled n now splits into n up (upper) and n down (lower). The vertical distance between the upper and lower nodes is emphasized on both sides to indicate the branch widths delta s and delta n.",
+          "chart_type": "branch diagram",
+          "axes": "No numeric axes; it is a schematic binary split over one discrete time step.",
+          "trend": "Each process has two possible next values; the key comparison is between the up-down spread in S and the up-down spread in N.",
+          "significance": "This local geometry is the entire proof: in a two-point world, matching widths defines phi, and the martingale condition removes any additive drift."
+        }
+      ]
+    },
+    {
+      "name": "7) Financial application: discounting, replication, self-financing, and pricing",
+      "narration": "To turn the representation theorem into a pricing and hedging tool, we introduce the cash bond process B. B_i is the value at time i of one unit invested risk-free; typically B_0 is 1 and B_i is positive and known in advance.\n\nWe then discount prices by dividing by the bond. The discounted stock is Z_i, defined as S_i divided by B_i. The crucial modeling step is: choose Q so that the discounted stock Z is a Q-martingale.\n\nNow take any claim X paying at maturity T. Discount it: B_T inverse times X. Turn that discounted terminal payoff into a process by conditional expectation under Q. Call that process E_i.\n\nBecause it is a conditional-expectation process, E is a Q-martingale. Because Z is also a Q-martingale, the Binomial Representation Theorem applies: E can be written as E_0 plus a sum of predictable holdings phi times increments of Z.\n\nThat phi is exactly the stock holding in discounted units. To build an actual trading strategy in stock and bond, we supplement phi with a bond holding psi chosen so that the portfolio value matches B_i times E_i at each time.\n\nWhen set up correctly, the strategy is self-financing: you can roll the portfolio forward from time i to i plus 1 without injecting or withdrawing cash, regardless of whether the stock went up or down.\n\nAt maturity, because E_T equals the discounted payoff, multiplying back by B_T gives you exactly X. So the portfolio replicates the claim.\n\nFinally, this gives the pricing formula: the arbitrage-free price at time i is B_i times the Q-conditional expectation of the discounted payoff. In the standard binomial model the martingale measure is unique, so the price is unique.\n\n[pause 5 seconds]\n\nWe’ll close by summarizing the logical chain: claim to conditional-expectation martingale; representation via predictable trading in discounted stock; add bond to make a self-financing portfolio; conclude replication and the risk-neutral pricing formula.",
+      "spoken_math": [
+        {
+          "latex": "Z_t := B_t^{-1} S_t",
+          "spoken": "Define Z sub t as B sub t to the minus one times S sub t, meaning the discounted stock price equals the stock price divided by the bond value.",
+          "intuition": "Discounting removes the risk-free growth so that under the right measure the remaining process has no drift."
+        },
+        {
+          "latex": "E_t = \\mathbb{E}^Q\\big[B_T^{-1} X\\,|\\,\\mathcal{F}_t\\big]",
+          "spoken": "Define E sub t as the expectation under Q of B sub T to the minus one times X, given F sub t.",
+          "intuition": "E is the time-t value, in discounted units, of the best Q-forecast of the discounted payoff."
+        },
+        {
+          "latex": "E_t = E_0 + \\sum_{k=1}^t \\phi_k\\,\\Delta Z_k",
+          "spoken": "E sub t equals E sub zero plus the sum from k equals one to t of phi sub k times delta Z sub k.",
+          "intuition": "The discounted claim-martingale can be generated by trading gains from holding phi shares of the discounted stock."
+        },
+        {
+          "latex": "\\psi_{i+1} = E_i - \\phi_{i+1} B_i^{-1} S_i",
+          "spoken": "Psi sub i plus one equals E sub i minus phi sub i plus one times S sub i divided by B sub i.",
+          "intuition": "After choosing the stock holding, you choose the bond holding to make the portfolio’s discounted value equal to E."
+        },
+        {
+          "latex": "V_i = B_i\\,\\mathbb{E}_Q\\big[B_T^{-1} X \\mid \\mathcal{F}_i\\big]",
+          "spoken": "The time-i price V sub i equals B sub i times the conditional expectation under Q of the discounted payoff B sub T to the minus one times X, given F sub i.",
+          "intuition": "This is the risk-neutral valuation rule in discrete time: discount the payoff, take expectation under the martingale measure, then convert back to time-i currency units."
+        },
+        {
+          "latex": "\\Delta V_i = \\phi_i \\Delta S_i + \\psi_i \\Delta B_i",
+          "spoken": "Delta V sub i equals phi sub i times delta S sub i plus psi sub i times delta B sub i.",
+          "intuition": "Self-financing means portfolio changes are exactly the gains and losses from the assets you hold—no external cash flows."
+        }
+      ],
+      "figure_narration": []
+    }
+  ],
+  "final_recap": "We modeled the stock on a recombining binomial tree and introduced probability measures P and Q as branch-weighting rules. We formalized information over time with the filtration F_i, defined claims as terminal random variables, and used conditional expectation to translate a claim into a time-indexed process.\n\nKey structural facts: the conditional-expectation process of any claim is automatically a martingale (tower law). A previsible process is one whose value at time i is decided using information up to time i minus 1, matching the timing of trading decisions.\n\nWith a martingale measure Q (typically chosen so the discounted stock is a Q-martingale), the Binomial Representation Theorem states that any Q-martingale N can be written as N_i equals N_0 plus a sum of predictable multiples of stock increments. The proof is local: match up-down branch widths to define phi, then use martingale and previsibility to force the additive offset to be zero.\n\nFinancially, discount by the bond, form the discounted claim-martingale E_i equals E^Q of discounted payoff given F_i, represent E using predictable trading in discounted stock, add bond holdings to make the strategy self-financing, and conclude replication. The arbitrage-free price becomes the discounted Q-conditional expectation of the payoff; in the binomial model this price is unique."
+}

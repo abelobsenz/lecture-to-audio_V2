@@ -1,0 +1,242 @@
+[
+  {
+    "chunk_summary": [
+      {
+        "page": 1,
+        "summary": "Motivation and overview. Discrete-time models with small inter-tick time are used to approximate continuous-time price dynamics. A simple discrete model with constant growth (\u03bc) and noise (\u03c3) leads to log-normal marginals under both the real measure P and the risk-neutral (martingale) measure Q. The Black\u2013Scholes formula can be derived heuristically from this approximation."
+      },
+      {
+        "page": 2,
+        "summary": "Model specification. The model is parameterized by inter-tick time \u03b4t and three constants: noise \u03c3, stock growth \u03bc, and risk-free rate r. The cash bond is B_t = exp(r t). The stock moves on a recombining tree: from s it goes to s\u00b7exp(\u03bc \u03b4t + \u03c3 \u221a(\u03b4t)) on an up-jump and to s\u00b7exp(\u03bc \u03b4t - \u03c3 \u221a(\u03b4t)) on a down-jump. Up and down jumps are equally likely (p = 1/2)."
+      },
+      {
+        "page": 3,
+        "summary": "Distributional limit as ticks become frequent. For fixed horizon t, let n = t/\u03b4t and let X_n be the number of up-jumps in n steps. Then S_t can be written in terms of X_n. X_n ~ Binomial(n,1/2) with mean n/2 and variance n/4 so the normalized variable (2X_n - n)/\u221an has mean 0 and variance 1. By the Central Limit Theorem this converges to N(0,1) as n\u2192\u221e, yielding log S_t ~ Normal(log S_0 + \u03bc t, \u03c3^2 t) \u2014 i.e. S_t becomes log-normal."
+      }
+    ],
+    "key_definitions": [
+      {
+        "term": "intertick time",
+        "definition": "\u03b4t \u2014 the discrete time increment between successive price updates; the model is intended to approximate continuous time as \u03b4t \u2192 0."
+      },
+      {
+        "term": "noise (volatility)",
+        "definition": "\u03c3 \u2014 parameter controlling the magnitude of random upward/downward multiplicative shocks at each tick."
+      },
+      {
+        "term": "stock growth rate",
+        "definition": "\u03bc \u2014 deterministic drift per unit time applied multiplicatively in each tick."
+      },
+      {
+        "term": "riskless interest rate",
+        "definition": "r \u2014 continuously compounded risk-free rate used to price the cash bond and for risk-neutral adjustments."
+      },
+      {
+        "term": "cash bond",
+        "definition": "B_t = exp(r t) \u2014 the deterministic growth of the riskless asset."
+      },
+      {
+        "term": "recombinant tree jump rule",
+        "definition": "From node value s at a tick of length \u03b4t, the next value is s\u00b7exp(\u03bc \u03b4t + \u03c3 \u221a(\u03b4t)) on an up-jump and s\u00b7exp(\u03bc \u03b4t - \u03c3 \u221a(\u03b4t)) on a down-jump."
+      },
+      {
+        "term": "tick-count and up-jump count",
+        "definition": "For horizon t set n = t/\u03b4t. X_n = number of up-jumps among the n independent Bernoulli steps (each with p = 1/2 under P)."
+      }
+    ],
+    "theorems": [
+      {
+        "name": "Central Limit Theorem (applied)",
+        "statement": "For X_n ~ Binomial(n,1/2), the normalized variable (2 X_n - n)/\u221an converges in distribution to N(0,1) as n \u2192 \u221e.",
+        "role_in_text": "Used to justify that the discrete multiplicative model's log-returns converge to a normal distribution when the number of ticks n grows (\u03b4t \u2192 0), implying S_t becomes log-normal with variance scaling \u03c3^2 t."
+      }
+    ],
+    "equations": [
+      {
+        "latex": "B_t = \\exp(r t)",
+        "meaning": "Value of the riskless cash bond at time t (continuous compounding).",
+        "intuition": "Deterministic exponential growth at rate r; used for discounting and to define the martingale/risk-neutral measure."
+      },
+      {
+        "latex": "s_{\\text{up}} = s \\exp(\\mu\\,\\delta t + \\sigma\\sqrt{\\delta t}), \\quad s_{\\text{down}} = s \\exp(\\mu\\,\\delta t - \\sigma\\sqrt{\\delta t})",
+        "meaning": "Multiplicative update rules for the stock price at one tick: up and down outcomes.",
+        "intuition": "Each tick applies a deterministic drift \u03bc \u03b4t and a symmetric \u00b1random shock of size \u03c3\u221a(\u03b4t) in the exponent so jumps multiplicatively and recombine across paths."
+      },
+      {
+        "latex": "p = \\tfrac{1}{2}",
+        "meaning": "Under the original measure P each up or down jump is equally likely.",
+        "intuition": "Simple symmetric Bernoulli step for the discrete model's noise component."
+      },
+      {
+        "latex": "n = t/\\delta t, \\quad X_n = \\text{number of up-jumps in } n \\text{ steps}",
+        "meaning": "Definition of number of discrete steps n and the count of up moves X_n over horizon t.",
+        "intuition": "Relates the discrete-time model to a fixed continuous horizon by counting ticks."
+      },
+      {
+        "latex": "S_t = S_0 \\exp\\Big(\\mu t + \\sigma\\sqrt{t}\\;\\frac{2X_n - n}{\\sqrt{n}}\\Big)",
+        "meaning": "Expression of the terminal stock price after n steps in terms of X_n.",
+        "intuition": "Separates deterministic drift \u03bc t from the aggregated random contribution: the normalized sum (2X_n-n)/\u221an captures standardized net up-moves and scales with \u03c3\u221at."
+      },
+      {
+        "latex": "\\mathbb{E}[X_n] = n/2, \\quad \\operatorname{Var}(X_n) = n/4, \\quad \\Rightarrow \\frac{2X_n - n}{\\sqrt{n}} \\text{ has mean }0\\text{ and variance }1",
+        "meaning": "Moments of the binomial up-count and the standardized variable used in the CLT.",
+        "intuition": "Shows the normalized aggregate noise has unit variance and zero mean, preparing for Gaussian approximation."
+      },
+      {
+        "latex": "\\log S_t \\xrightarrow[]{d} \\mathcal{N}(\\log S_0 + \\mu t,\\;\\sigma^2 t)",
+        "meaning": "Limit distribution of log-price as \u03b4t \u2192 0 (n \u2192 \u221e): normal with mean log S_0 + \u03bc t and variance \u03c3^2 t.",
+        "intuition": "By CLT, the discrete-time log-returns aggregate to a Gaussian process; hence the stock becomes log-normal marginally, matching the geometric Brownian motion marginal law."
+      }
+    ],
+    "figures": [
+      {
+        "id": "fig_page1",
+        "type": "slide",
+        "description": "Title slide 'Overture to continuous models' with bullets summarizing motivation: discrete techniques approximate continuous models, leads to log-normal under P and Q, connection to Black\u2013Scholes.",
+        "axes": [],
+        "trend": null,
+        "significance": "Sets context and objectives: motivate passing from discrete trees to continuous-time option pricing models."
+      },
+      {
+        "id": "fig_page2",
+        "type": "slide",
+        "description": "Slide 'Model with constant stock growth and noise' listing model parameters (\u03b4t, \u03c3, \u03bc, r), cash bond formula, per-tick up/down multiplicative updates, and p=1/2.",
+        "axes": [],
+        "trend": null,
+        "significance": "Specifies the discrete-time multiplicative model that will be used to approximate continuous dynamics."
+      },
+      {
+        "id": "fig_page3",
+        "type": "slide",
+        "description": "Slide 'Model with constant stock growth and noise, continued' deriving S_t in terms of X_n, stating binomial moments and invoking the Central Limit Theorem to conclude log-normality of S_t as \u03b4t \u2192 0.",
+        "axes": [],
+        "trend": null,
+        "significance": "Provides the probabilistic derivation (via CLT) that the discrete model's log-price converges to a normal distribution, yielding log-normal stock prices in the limit."
+      }
+    ],
+    "tables": []
+  },
+  {
+    "chunk_summary": {
+      "scope": "Slides 4-6 (Under the martingale measure; continuation; Pricing a call option)",
+      "main_points": [
+        "Compute the martingale (risk-neutral) probability q for the discrete up/down model and approximate it for small inter-tick time \u03b4t.",
+        "Under the martingale measure Q the binomial-count statistic (2X_n - n)/\u221an has a nonzero mean (drift adjustment) but variance \u2192 1; by the Central Limit Theorem it converges to a normal variable.",
+        "Consequently, under Q the asset price S_t is asymptotically log-normal with log-mean log S_0 + (r - 1/2 \u03c3^2) t and variance \u03c3^2 t; equivalently S_t = S_0 exp(\u03c3 \u221at Z + (r - 1/2 \u03c3^2) t) with Z ~ N(0,1) under Q.",
+        "The time-0 no-arbitrage price of a European call X = (S_T - k)^+ is the discounted Q-expectation E_Q[B_T^{-1} X], which leads to the Black\u2013Scholes closed-form formula involving standard normal cdf \u03a6."
+      ],
+      "structure": [
+        "Slide 4: formula for q and its small-\u03b4t approximation; implication that X_n under Q is binomial with mean n q and variance n q (1-q).",
+        "Slide 5: asymptotic mean and variance of (2X_n - n)/\u221an under Q, CLT application, log-normal marginal distribution of S_t under Q with explicit representation involving Z ~ N(0,1).",
+        "Slide 6: expression for discounted payoff expectation and the Black\u2013Scholes formula for a European call price."
+      ]
+    },
+    "key_definitions": {
+      "q": {
+        "latex": "q = \\frac{s\\,e^{r\\,\\delta t} - s_{down}}{s_{up} - s_{down}}",
+        "meaning": "The risk-neutral (martingale) probability of an up-jump in the discrete up/down model.",
+        "notes": "For small inter-tick time \u03b4t this is approximated to shift the physical probability p to a risk-neutral one."
+      },
+      "X_n": {
+        "latex": "X_n",
+        "meaning": "Number of up-jumps in n independent up/down steps (binomial random variable).",
+        "notes": "Under P it has mean n/2 (when p=1/2); under Q it has mean n q and variance n q (1-q)."
+      },
+      "S_t (under Q)": {
+        "latex": "S_t = S_0 \\exp\\big(\\sigma\\sqrt{t}\\,Z + (r - \\tfrac{1}{2}\\sigma^2)t\\big), \\quad Z\\sim N(0,1)\\ \\text{under }Q",
+        "meaning": "Asymptotic (marginal) log-normal distribution of the asset price at time t under the risk-neutral measure Q.",
+        "notes": "Drift equals risk-free rate r (after the 1/2 \u03c3^2 correction) consistent with risk-neutral pricing."
+      },
+      "B_t": {
+        "latex": "B_t = \\exp(r t)",
+        "meaning": "Cash bond (riskless asset) evolving at continuously compounded rate r.",
+        "notes": "Used to discount payoffs when computing Q-expectations."
+      },
+      "Z": {
+        "latex": "Z",
+        "meaning": "Standard normal random variable N(0,1) under Q emerging from CLT limit of the normalized binomial count.",
+        "notes": "Represents the Gaussian noise in the continuous-time log-normal model."
+      },
+      "Call payoff X": {
+        "latex": "X = (S_T - k)^+",
+        "meaning": "Payoff at maturity T of a European call option with strike k.",
+        "notes": "Price at t=0 is E_Q[B_T^{-1} X] by risk-neutral valuation."
+      }
+    },
+    "theorems": [
+      {
+        "name": "Central Limit Theorem (applied)",
+        "statement": "The normalized sum (or normalized binomial-count statistic) converges in distribution to a normal random variable as the number of steps n\u2192\u221e (equivalently \u03b4t\u21920 with t fixed).",
+        "role_in_chunk": "Used to conclude that (2X_n - n)/\u221an converges to a normal variable (with a drift under Q), which yields the log-normal limit for S_t under Q."
+      },
+      {
+        "name": "Risk-neutral (martingale) pricing principle",
+        "statement": "In an arbitrage-free model there exists an equivalent martingale measure Q under which discounted asset prices are martingales; derivative prices are given by discounted expectations under Q.",
+        "role_in_chunk": "Provides the justification to replace physical probabilities by q, compute the Q-marginal distribution of S_t, and price the call by E_Q[B_T^{-1} X]."
+      }
+    ],
+    "equations": [
+      {
+        "latex": "q = \\frac{s\\,e^{r\\,\\delta t} - s_{down}}{s_{up} - s_{down}}",
+        "meaning": "Exact expression for the risk-neutral probability q in a single-step up/down model (ensures discounted expected next price equals current price).",
+        "intuition": "q is chosen so that the expected discounted stock price under q equals the current price \u2014 it shifts physical probabilities to eliminate arbitrage."
+      },
+      {
+        "latex": "q \\approx \\tfrac{1}{2}\\left(1 - \\sqrt{\\delta t}\\,\\frac{\\mu + \\tfrac{1}{2}\\sigma^2 - r}{\\sigma}\\right)",
+        "meaning": "Small-\u03b4t approximation of q in terms of model parameters \u03bc, \u03c3 and r.",
+        "intuition": "For very small time-steps the risk-neutral probability deviates slightly from 1/2 by an amount proportional to \u221a{\u03b4t} and the excess drift (\u03bc + 1/2 \u03c3^2 \u2212 r) scaled by \u03c3."
+      },
+      {
+        "latex": "\\frac{2X_n - n}{\\sqrt{n}} \\xrightarrow{d} N\\Big(-\\sqrt{t}\\,\\frac{\\mu + \\tfrac{1}{2}\\sigma^2 - r}{\\sigma},\\ 1\\Big) \\quad\\text{under }Q",
+        "meaning": "Asymptotic distribution (mean and variance) of the normalized up-count under the martingale measure Q.",
+        "intuition": "Under Q the normalized binomial statistic has a nonzero mean (reflecting the change from P to Q) but unit variance; CLT gives the Gaussian limit."
+      },
+      {
+        "latex": "S_t = S_0\\exp\\big(\\sigma\\sqrt{t}\\,Z + (r - \\tfrac{1}{2}\\sigma^2)t\\big),\\quad Z\\sim N(0,1)\\ \\text{(under Q)}",
+        "meaning": "Log-normal marginal distribution of the stock price at time t under the risk-neutral measure.",
+        "intuition": "The discrete up/down model with many small steps converges to geometric Brownian motion marginal \u2014 volatility scales as \u221at and drift becomes r - 1/2 \u03c3^2 under Q."
+      },
+      {
+        "latex": "C_0 = E_Q\\big[B_T^{-1}(S_T - k)^+\\big] = S_0\\Phi(d_1) - k e^{-rT}\\Phi(d_2)",
+        "meaning": "Black\u2013Scholes formula for the time-0 price C_0 of a European call with maturity T and strike k, where d_{1,2} are the usual terms.",
+        "intuition": "The call price is the discounted risk-neutral expectation of the payoff; integration against the log-normal density yields the closed-form expression with normal cdf \u03a6.",
+        "notes": {
+          "d1": "d_1 = \\dfrac{\\ln(S_0/k) + (r + \\tfrac{1}{2}\\sigma^2)T}{\\sigma\\sqrt{T}}",
+          "d2": "d_2 = d_1 - \\sigma\\sqrt{T}"
+        }
+      },
+      {
+        "latex": "E_Q\\Big[\\big(S_0\\exp(\\sigma\\sqrt{T}Z - \\tfrac{1}{2}\\sigma^2 T) - k e^{-rT}\\big)^+\\Big]",
+        "meaning": "The discounted expectation form (integrand) used before evaluating to the closed-form Black\u2013Scholes expression.",
+        "intuition": "This is the direct risk-neutral expectation of the discounted payoff written in terms of the log-normal representation of S_T."
+      }
+    ],
+    "figures": [
+      {
+        "id": "fig4",
+        "type": "slide",
+        "description": "Slide titled 'Under the martingale measure' (first slide). Contains the exact formula for q and its small-\u03b4t approximation, and the remark that X_n is binomial with mean n q and variance n q(1-q) under Q.",
+        "axes": null,
+        "trend": "none",
+        "significance": "Introduces the computation of risk-neutral probabilities in the discrete model and prepares for the CLT-based limit under Q."
+      },
+      {
+        "id": "fig5",
+        "type": "slide",
+        "description": "Slide titled 'Under the martingale measure, continued'. States the asymptotic mean and variance of (2X_n - n)/\u221an under Q, uses the Central Limit Theorem, and gives the log-normal form S_t = S_0 exp(\u03c3\u221at Z + (r - 1/2 \u03c3^2) t) with Z ~ N(0,1) under Q.",
+        "axes": null,
+        "trend": "none",
+        "significance": "Key slide deriving the continuous-time risk-neutral marginal distribution of the stock via CLT and showing the drift becomes r - 1/2 \u03c3^2 under Q."
+      },
+      {
+        "id": "fig6",
+        "type": "slide",
+        "description": "Slide titled 'Pricing a call option'. Defines the call payoff X = (S_T - k)^+, writes the discounted Q-expectation, and presents the Black\u2013Scholes closed-form formula involving \u03a6.",
+        "axes": null,
+        "trend": "none",
+        "significance": "Connects the derived risk-neutral log-normal distribution to option pricing and states the Black\u2013Scholes formula as the evaluation of the Q-expectation."
+      }
+    ],
+    "tables": []
+  }
+]
