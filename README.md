@@ -65,6 +65,16 @@ Process a folder of PDFs without running the server:
 lecture-to-audio /path/to/pdfs
 ```
 
+## Sync Local Data Folder to Server
+
+If you already processed PDFs locally and want to push your `data/` folder (scripts + chunks) to the server:
+
+```bash
+python tools/process_and_upload.py --sync-data data --server http://YOUR_SERVER_IP:8002
+```
+
+This uploads any missing lectures from `data/scripts` and `data/chunks` to the server.
+
 ## iPhone sync (iCloud Drive)
 
 Set `IOS_SYNC_DIR` to an iCloud Drive folder. Example macOS paths:

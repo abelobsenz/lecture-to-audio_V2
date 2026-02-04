@@ -48,6 +48,8 @@ final class PlayerViewModel: ObservableObject {
     private var activeChunkIndex: Int? = nil
     private var rollbackChunkIndex: Int? = nil
     private var chunkIndex: Int = 0
+    private var lastPlayedChunkIndex: Int? = nil
+    private var pausedResumeIndex: Int? = nil
     private var recentChunks: [RecentChunk] = []
     private var interruptObserver: NSObjectProtocol?
     private let progressKeyPrefix = "lectureProgress."
@@ -132,6 +134,7 @@ final class PlayerViewModel: ObservableObject {
     }
 
     func startPlayback(resumeFromSaved: Bool = true) {
+        let resumingFromPause = state == .paused
         playbackTask?.cancel()
         realtime.disconnect()
         responseContinuation = nil
@@ -144,12 +147,16 @@ final class PlayerViewModel: ObservableObject {
         activeChunkIndex = nil
         pendingQuestionTask?.cancel()
         isMicEnabled = false
-        if resumeFromSaved, let saved = loadSavedProgress() {
+        lastPlayedChunkIndex = nil
+        if resumingFromPause, let pausedIndex = pausedResumeIndex {
+            chunkIndex = pausedIndex
+        } else if resumeFromSaved, let saved = loadSavedProgress() {
             chunkIndex = saved
         } else {
             chunkIndex = 0
             clearSavedProgress()
         }
+        pausedResumeIndex = nil
         recentChunks = []
         recentContextText = ""
         currentChunkText = ""
@@ -162,6 +169,7 @@ final class PlayerViewModel: ObservableObject {
 
     func restartPlayback() {
         clearSavedProgress()
+        pausedResumeIndex = nil
         startPlayback(resumeFromSaved: false)
     }
 
@@ -174,7 +182,9 @@ final class PlayerViewModel: ObservableObject {
 
     func pausePlayback() {
         guard state == .playing || state == .waitingToResume || state == .answering else { return }
-        saveCurrentProgress()
+        let pauseIndex = activeChunkIndex ?? lastPlayedChunkIndex ?? chunkIndex
+        pausedResumeIndex = pauseIndex
+        saveProgress(pauseIndex)
         if realtime.isResponseActive {
             realtime.cancelResponse()
         }
@@ -291,6 +301,7 @@ final class PlayerViewModel: ObservableObject {
                 let response = try await api.fetchChunk(lectureId: lectureId, index: chunkIndex)
                 let chunk = response.chunk
                 activeChunkIndex = chunkIndex
+                lastPlayedChunkIndex = chunkIndex
                 currentChunkText = chunk.text
                 currentSection = chunk.sectionName ?? ""
 
@@ -310,6 +321,9 @@ final class PlayerViewModel: ObservableObject {
                     let remaining = TimeInterval(chunk.approxSeconds) - elapsed
                     if remaining > 0 {
                         try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
+                    }
+                    if Task.isCancelled || state != .playing {
+                        break
                     }
                     updateRecentContext(with: chunk)
                     chunkIndex += 1
@@ -536,7 +550,7 @@ final class PlayerViewModel: ObservableObject {
     }
 
     private func saveCurrentProgress() {
-        let resumeIndex = activeChunkIndex ?? chunkIndex
+        let resumeIndex = rollbackChunkIndex ?? activeChunkIndex ?? lastPlayedChunkIndex ?? max(chunkIndex - 1, 0)
         saveProgress(resumeIndex)
     }
 
