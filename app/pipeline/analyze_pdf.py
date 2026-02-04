@@ -57,6 +57,37 @@ def _safe_json_loads(text: str) -> Dict[str, Any]:
         return _coerce_json(repaired)
 
 
+def _repair_json_with_model(client: OpenAI, text: str) -> str:
+    prompt = (
+        "Fix the following JSON. Return ONLY valid JSON with the same keys/structure. "
+        "Do not add commentary or code fences.\n\n"
+        f"{text}"
+    )
+    model_name = settings.openai_model_fallback or settings.openai_model_analysis
+    response = client.responses.create(
+        model=model_name,
+        input=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "input_text", "text": prompt},
+                ],
+            }
+        ],
+    )
+    repaired_text = getattr(response, "output_text", None)
+    if not repaired_text and getattr(response, "output", None):
+        parts = []
+        for out in response.output:
+            for content in getattr(out, "content", []):
+                if getattr(content, "type", "") in {"output_text", "text"}:
+                    parts.append(getattr(content, "text", ""))
+        repaired_text = "\n".join(parts)
+    if not repaired_text:
+        raise RuntimeError("No text output returned from model")
+    return _strip_code_fences(repaired_text)
+
+
 def upload_pdf(client: OpenAI, pdf_path: Path) -> str:
     with pdf_path.open("rb") as f:
         file_obj = client.files.create(file=f, purpose="assistants")
@@ -106,7 +137,11 @@ def analyze_pdf_chunks(client: OpenAI, pdf_path: Path) -> List[ChunkResult]:
             text = "\n".join(parts)
         if not text:
             raise RuntimeError("No text output returned from model")
-        data = _safe_json_loads(text)
+        try:
+            data = _safe_json_loads(text)
+        except json.JSONDecodeError:
+            repaired_text = _repair_json_with_model(client, text)
+            data = _safe_json_loads(repaired_text)
         results.append(ChunkResult(start_page=start_page, end_page=end_page, data=data))
         page = end_page + 1
     return results
