@@ -284,7 +284,10 @@ def get_audio(job_id: str):
 
 
 @app.get("/lectures", response_model=list[LectureSummary])
-def list_lectures(include_missing: bool = Query(default=False)):
+def list_lectures(
+    include_missing: bool = Query(default=False),
+    include_non_done: bool = Query(default=False),
+):
     with get_session(engine) as session:
         lectures = session.exec(select(Lecture)).all()
         jobs = session.exec(select(Job)).all()
@@ -296,7 +299,8 @@ def list_lectures(include_missing: bool = Query(default=False)):
             filtered: list[Lecture] = []
             for lecture in lectures:
                 if lecture.status != LectureStatus.done:
-                    filtered.append(lecture)
+                    if include_non_done:
+                        filtered.append(lecture)
                     continue
                 chunks_path = lecture.chunks_json_path
                 script_path = lecture.lecture_script_json_path
