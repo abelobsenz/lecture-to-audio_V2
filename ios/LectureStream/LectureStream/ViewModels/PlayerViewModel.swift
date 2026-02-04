@@ -121,6 +121,17 @@ final class PlayerViewModel: ObservableObject {
 
     func startPlayback() {
         playbackTask?.cancel()
+        realtime.disconnect()
+        responseContinuation = nil
+        responseToken = nil
+        responseActive = false
+        pendingResume = false
+        pendingRetryChunk = false
+        interruptedDuringChunk = false
+        rollbackChunkIndex = nil
+        activeChunkIndex = nil
+        pendingQuestionTask?.cancel()
+        isMicEnabled = false
         chunkIndex = 0
         recentChunks = []
         recentContextText = ""
@@ -382,6 +393,9 @@ final class PlayerViewModel: ObservableObject {
         if normalized.contains("ok") || normalized.contains("okay") || normalized.contains("continue") || normalized.contains("resume") {
             resumeIfRequested()
             return
+        }
+        if state == .waitingToResume {
+            state = .interrupted
         }
         guard state == .interrupted || state == .answering else { return }
         // Avoid firing multiple times if the user keeps speaking; debounce to the last completed transcript.

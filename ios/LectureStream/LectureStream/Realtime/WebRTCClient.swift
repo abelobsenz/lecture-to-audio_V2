@@ -42,6 +42,7 @@ final class WebRTCClient: NSObject {
 
         let audioSource = factory.audioSource(with: RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil))
         let audioTrack = factory.audioTrack(with: audioSource, trackId: "audio0")
+        audioTrack.isEnabled = false
         peerConnection.add(audioTrack, streamIds: ["stream0"])
         self.localAudioTrack = audioTrack
 
@@ -150,6 +151,13 @@ extension WebRTCClient: RTCPeerConnectionDelegate {
         if let audioTrack = rtpReceiver.track as? RTCAudioTrack {
             audioTrack.isEnabled = true
             print("WebRTC: received remote audio track")
+            if localAudioTrack?.isEnabled != true {
+                do {
+                    try AudioSessionManager.shared.activateForPlayback()
+                } catch {
+                    print("WebRTC: failed to re-activate playback session: \(error)")
+                }
+            }
         }
     }
 }
