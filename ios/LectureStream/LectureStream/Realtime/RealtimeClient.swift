@@ -5,10 +5,13 @@ final class RealtimeClient {
     private let webRTC = WebRTCClient()
     private var pendingEvents: [String] = []
     private(set) var isResponseActive: Bool = false
+    private var currentAssistantText: String = ""
+    private(set) var lastAssistantText: String = ""
 
     var onConnectionState: ((String) -> Void)?
     var onResponseStarted: (() -> Void)?
     var onResponseCompleted: (() -> Void)?
+    var onAssistantTextUpdate: ((String) -> Void)?
     var onTranscript: ((String) -> Void)?
     var onUserTranscriptCompleted: ((String) -> Void)?
     var onError: ((String) -> Void)?
@@ -38,6 +41,10 @@ final class RealtimeClient {
 
     func setMicrophoneEnabled(_ enabled: Bool) {
         webRTC.setMicrophoneEnabled(enabled)
+    }
+
+    func setRemoteAudioMuted(_ muted: Bool) {
+        webRTC.setRemoteAudioMuted(muted)
     }
 
     func updateSession(instructions: String, voice: String) {
@@ -134,11 +141,13 @@ final class RealtimeClient {
 
         if type == "response.created" {
             isResponseActive = true
+            currentAssistantText = ""
             onResponseStarted?()
         }
 
         if isResponseCompleted(type: type) {
             isResponseActive = false
+            lastAssistantText = currentAssistantText
             onResponseCompleted?()
         }
 
@@ -151,6 +160,16 @@ final class RealtimeClient {
         if isUserTranscriptEvent(type: type, payload: payload) {
             if let transcript = extractTranscript(from: payload) {
                 onTranscript?(transcript)
+            }
+        }
+
+        if let delta = extractAssistantTextDelta(type: type, payload: payload) {
+            currentAssistantText.append(delta)
+            onAssistantTextUpdate?(currentAssistantText)
+        } else if let snapshot = extractAssistantTextSnapshot(type: type, payload: payload) {
+            if snapshot.count > currentAssistantText.count {
+                currentAssistantText = snapshot
+                onAssistantTextUpdate?(currentAssistantText)
             }
         }
     }
@@ -199,6 +218,48 @@ final class RealtimeClient {
                 }
                 if let text = entry["text"] as? String {
                     return text
+                }
+            }
+        }
+        return nil
+    }
+
+    private func extractAssistantTextDelta(type: String, payload: [String: Any]) -> String? {
+        if type.contains("response.output_text.delta") || type.contains("response.text.delta") {
+            return payload["delta"] as? String
+        }
+        return nil
+    }
+
+    private func extractAssistantTextSnapshot(type: String, payload: [String: Any]) -> String? {
+        if let item = payload["item"] as? [String: Any],
+           let role = item["role"] as? String,
+           role == "assistant",
+           let content = item["content"] as? [[String: Any]] {
+            for entry in content {
+                if let text = entry["text"] as? String {
+                    return text
+                }
+            }
+        }
+        if type.contains("response.output_item"),
+           let item = payload["item"] as? [String: Any],
+           let content = item["content"] as? [[String: Any]] {
+            for entry in content {
+                if let text = entry["text"] as? String {
+                    return text
+                }
+            }
+        }
+        if let response = payload["response"] as? [String: Any],
+           let output = response["output"] as? [[String: Any]] {
+            for item in output {
+                if let content = item["content"] as? [[String: Any]] {
+                    for entry in content {
+                        if let text = entry["text"] as? String {
+                            return text
+                        }
+                    }
                 }
             }
         }

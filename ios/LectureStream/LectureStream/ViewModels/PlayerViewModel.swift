@@ -39,6 +39,11 @@ final class PlayerViewModel: ObservableObject {
     private var errorRecoveryAttempts: Int = 0
     private var lastErrorAt: Date? = nil
     private var pendingQuestionTask: Task<Void, Never>? = nil
+    private var pendingFollowup: Bool = false
+    private var lastQuestion: String = ""
+    private var lastQuestionContext: String = ""
+    private var latestAssistantResponse: String = ""
+    private var lastAssistantResponse: String = ""
     private var activeChunkIndex: Int? = nil
     private var rollbackChunkIndex: Int? = nil
     private var chunkIndex: Int = 0
@@ -79,6 +84,11 @@ final class PlayerViewModel: ObservableObject {
                 self?.handleUserTranscriptCompleted(transcript)
             }
         }
+        realtime.onAssistantTextUpdate = { [weak self] text in
+            Task { @MainActor in
+                self?.latestAssistantResponse = text
+            }
+        }
         realtime.onError = { [weak self] message in
             Task { @MainActor in
                 guard let self else { return }
@@ -97,7 +107,7 @@ final class PlayerViewModel: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                self?.interruptPlayback()
+                self?.handleInterruptRequest()
             }
         }
 
@@ -155,25 +165,42 @@ final class PlayerViewModel: ObservableObject {
     }
 
     func interruptPlayback() {
+        guard state == .playing else { return }
+        state = .interrupted
+        interruptedDuringChunk = true
+        pendingRetryChunk = true
+        if let active = activeChunkIndex {
+            rollbackChunkIndex = active
+        } else {
+            rollbackChunkIndex = chunkIndex
+        }
+        if realtime.isResponseActive {
+            realtime.cancelResponse()
+        }
+        isMicEnabled = true
+        realtime.setRemoteAudioMuted(true)
+        realtime.setMicrophoneEnabled(true)
+    }
+
+    private func handleInterruptRequest() {
         if state == .playing {
-            state = .interrupted
-            interruptedDuringChunk = true
-            pendingRetryChunk = true
-            if let active = activeChunkIndex {
-                rollbackChunkIndex = active
-            } else {
-                rollbackChunkIndex = chunkIndex
-            }
-            if realtime.isResponseActive {
-                realtime.cancelResponse()
-            }
-            isMicEnabled = true
-            realtime.setMicrophoneEnabled(true)
+            interruptPlayback()
             return
         }
-        guard state == .waitingToResume || state == .interrupted else { return }
+        if state == .waitingToResume || state == .answering {
+            beginFollowupInterrupt()
+        }
+    }
+
+    private func beginFollowupInterrupt() {
+        if realtime.isResponseActive {
+            realtime.cancelResponse()
+        }
+        lastAssistantResponse = latestAssistantResponse
+        pendingFollowup = true
         state = .interrupted
         isMicEnabled = true
+        realtime.setRemoteAudioMuted(true)
         realtime.setMicrophoneEnabled(true)
     }
 
@@ -196,6 +223,7 @@ final class PlayerViewModel: ObservableObject {
         state = .playing
         pendingResume = false
         isMicEnabled = false
+        realtime.setRemoteAudioMuted(false)
         realtime.setMicrophoneEnabled(false)
         playbackTask?.cancel()
         playbackTask = Task {
@@ -216,6 +244,7 @@ final class PlayerViewModel: ObservableObject {
             try await realtime.connect(ephemeralKey: token.clientSecret.value)
             realtime.updateSession(instructions: instructions.instructions, voice: token.voice)
             realtime.setMicrophoneEnabled(false)
+            realtime.setRemoteAudioMuted(false)
             isMicEnabled = false
             state = .playing
             await loadLecture()
@@ -309,6 +338,7 @@ final class PlayerViewModel: ObservableObject {
         responseToken = nil
         responseActive = false
         if state == .answering {
+            lastAssistantResponse = latestAssistantResponse
             state = .waitingToResume
             isMicEnabled = true
             realtime.setMicrophoneEnabled(true)
@@ -325,8 +355,12 @@ final class PlayerViewModel: ObservableObject {
         state = .answering
         do {
             let context = try await api.fetchContext(lectureId: lectureId, index: chunkIndex, window: 30)
-            let prompt = "User question: \(question). Recent lecture context: \(context.contextText). Answer concisely, then ask 'Ready to continue?'"
+            lastQuestion = question
+            lastQuestionContext = context.contextText
+            latestAssistantResponse = ""
+            let prompt = "User question: \(question). Recent lecture context: \(context.contextText). Answer concisely, then ask 'Forge ahead?'"
             realtime.sendUserText(prompt)
+            realtime.setRemoteAudioMuted(false)
             realtime.requestResponse()
             await waitForResponse(maxWaitSeconds: 45)
         } catch {
@@ -379,7 +413,7 @@ final class PlayerViewModel: ObservableObject {
 
     private func detectResumeCommand(in transcript: String) {
         let normalized = transcript.lowercased()
-        if normalized.contains("ok") || normalized.contains("okay") || normalized.contains("continue") {
+        if normalized.contains("forge ahead") {
             resumeIfRequested()
         }
     }
@@ -390,12 +424,9 @@ final class PlayerViewModel: ObservableObject {
         if normalized.isEmpty {
             return
         }
-        if normalized.contains("ok") || normalized.contains("okay") || normalized.contains("continue") || normalized.contains("resume") {
+        if normalized.contains("forge ahead") {
             resumeIfRequested()
             return
-        }
-        if state == .waitingToResume {
-            state = .interrupted
         }
         guard state == .interrupted || state == .answering else { return }
         // Avoid firing multiple times if the user keeps speaking; debounce to the last completed transcript.
@@ -406,7 +437,40 @@ final class PlayerViewModel: ObservableObject {
             self.isMicEnabled = false
             self.realtime.setMicrophoneEnabled(false)
             self.questionDraft = ""
-            await self.handleQuestion(transcript)
+            if self.pendingFollowup {
+                self.pendingFollowup = false
+                await self.handleFollowupQuestion(transcript)
+            } else {
+                await self.handleQuestion(transcript)
+            }
+        }
+    }
+
+    private func handleFollowupQuestion(_ question: String) async {
+        state = .answering
+        do {
+            let contextText: String
+            if lastQuestionContext.isEmpty {
+                let context = try await api.fetchContext(lectureId: lectureId, index: chunkIndex, window: 30)
+                contextText = context.contextText
+            } else {
+                contextText = lastQuestionContext
+            }
+            latestAssistantResponse = ""
+            let prompt = """
+            Follow-up question: \(question).
+            Previous question: \(lastQuestion).
+            Recent lecture context: \(contextText).
+            Previous answer (partial): \(lastAssistantResponse).
+            Answer concisely, then ask 'Forge ahead?'
+            """
+            realtime.sendUserText(prompt)
+            realtime.setRemoteAudioMuted(false)
+            realtime.requestResponse()
+            await waitForResponse(maxWaitSeconds: 45)
+        } catch {
+            errorMessage = error.localizedDescription
+            state = .error
         }
     }
 
@@ -430,4 +494,5 @@ final class PlayerViewModel: ObservableObject {
             MPMediaItemPropertyArtist: "LectureStream"
         ]
     }
+
 }

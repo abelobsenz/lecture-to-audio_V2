@@ -88,7 +88,7 @@ def build_realtime_instructions(title: str | None, outline: list[str]) -> str:
         "Speak naturally and at a steady pace.",
         "You will receive lecture chunks from the client; read them aloud verbatim as narration.",
         "If the user interrupts with STOP and a question, answer using the provided recent context and lecture outline.",
-        "If the user says OK, sounds good, continue from the next chunk.",
+        "If the user says 'forge ahead', continue from the next chunk.",
     ]
     if title:
         parts.insert(0, f"Lecture title: {title}.")

@@ -6,6 +6,8 @@ final class WebRTCClient: NSObject {
     private var peerConnection: RTCPeerConnection?
     private var dataChannel: RTCDataChannel?
     private var localAudioTrack: RTCAudioTrack?
+    private var remoteAudioTrack: RTCAudioTrack?
+    private var isRemoteAudioMuted: Bool = false
 
     var onDataMessage: ((String) -> Void)?
     var onConnectionStateChange: ((RTCIceConnectionState) -> Void)?
@@ -25,7 +27,7 @@ final class WebRTCClient: NSObject {
     }
 
     func connect(ephemeralKey: String) async throws {
-        try AudioSessionManager.shared.activateForPlayback()
+        try AudioSessionManager.shared.activateForRealtime()
 
         let config = RTCConfiguration()
         config.sdpSemantics = .unifiedPlan
@@ -68,6 +70,7 @@ final class WebRTCClient: NSObject {
         peerConnection = nil
         dataChannel = nil
         localAudioTrack = nil
+        remoteAudioTrack = nil
         AudioSessionManager.shared.deactivate()
     }
 
@@ -85,20 +88,13 @@ final class WebRTCClient: NSObject {
     }
 
     func setMicrophoneEnabled(_ enabled: Bool) {
-        if enabled {
-            do {
-                try AudioSessionManager.shared.activateForPlaybackAndRecord()
-            } catch {
-                print("WebRTC: failed to activate playAndRecord: \(error)")
-            }
-            localAudioTrack?.isEnabled = true
-        } else {
-            localAudioTrack?.isEnabled = false
-            do {
-                try AudioSessionManager.shared.activateForPlayback()
-            } catch {
-                print("WebRTC: failed to activate playback: \(error)")
-            }
+        localAudioTrack?.isEnabled = enabled
+    }
+
+    func setRemoteAudioMuted(_ muted: Bool) {
+        isRemoteAudioMuted = muted
+        if let track = remoteAudioTrack {
+            track.isEnabled = !muted
         }
     }
 
@@ -149,15 +145,9 @@ extension WebRTCClient: RTCPeerConnectionDelegate {
 
     func peerConnection(_ peerConnection: RTCPeerConnection, didAdd rtpReceiver: RTCRtpReceiver, streams: [RTCMediaStream]) {
         if let audioTrack = rtpReceiver.track as? RTCAudioTrack {
-            audioTrack.isEnabled = true
+            remoteAudioTrack = audioTrack
+            audioTrack.isEnabled = !isRemoteAudioMuted
             print("WebRTC: received remote audio track")
-            if localAudioTrack?.isEnabled != true {
-                do {
-                    try AudioSessionManager.shared.activateForPlayback()
-                } catch {
-                    print("WebRTC: failed to re-activate playback session: \(error)")
-                }
-            }
         }
     }
 }
