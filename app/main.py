@@ -3,17 +3,18 @@ from __future__ import annotations
 import datetime as dt
 import logging
 import os
+import uuid
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, Request, UploadFile, Query
+from fastapi import FastAPI, File, HTTPException, Request, UploadFile, Query, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import select
 
 from app.config import settings
-from app.db import Job, JobStatus, Lecture, LectureStatus, get_engine, get_session, init_db, FileRecord
-from app.chunking import build_context_text, get_chunk_by_index, load_chunks
+from app.db import Job, JobStatus, Lecture, LectureStatus, get_engine, get_session, init_db, FileRecord, OutputRecord
+from app.chunking import build_context_text, get_chunk_by_index, load_chunks, write_chunks
 from app.lectures import create_lecture_from_job, ensure_lecture
 from app.pipeline.ingest import create_job_for_upload
 from app.pipeline.worker import Worker
@@ -30,6 +31,9 @@ from app.schemas import (
     LectureContextResponse,
     RealtimeTokenResponse,
     RealtimeInstructionResponse,
+    PreprocessedLectureUpload,
+    PreprocessedUploadResponse,
+    LectureStatusResponse,
 )
 
 app = FastAPI(title="lecture-to-audio")
@@ -97,6 +101,11 @@ def build_realtime_instructions(title: str | None, outline: list[str]) -> str:
     return " ".join(parts)
 
 
+def _verify_upload_token(token: str | None) -> None:
+    if settings.upload_token and token != settings.upload_token:
+        raise HTTPException(status_code=401, detail="Invalid upload token")
+
+
 @app.on_event("startup")
 async def startup() -> None:
     init_db(engine)
@@ -160,6 +169,78 @@ async def upload(file: UploadFile = File(...)) -> UploadResponse:
 
     await worker.enqueue(job_id)
     return UploadResponse(job_id=job_id)
+
+
+@app.post("/lectures/preprocessed", response_model=PreprocessedUploadResponse)
+def upload_preprocessed(
+    payload: PreprocessedLectureUpload,
+    upload_token: str | None = Header(default=None, alias="X-Upload-Token"),
+) -> PreprocessedUploadResponse:
+    _verify_upload_token(upload_token)
+    lecture_id = payload.lecture_id or uuid.uuid4().hex
+    with get_session(engine) as session:
+        if session.get(Lecture, lecture_id) or session.get(Job, lecture_id):
+            raise HTTPException(status_code=409, detail="Lecture already exists")
+
+        now = dt.datetime.utcnow()
+        script_path = settings.scripts_dir / f"{lecture_id}_lecture_script.json"
+        script_path.parent.mkdir(parents=True, exist_ok=True)
+        script_path.write_text(payload.lecture_script.model_dump_json(indent=2), encoding="utf-8")
+
+        chunks_path = settings.chunks_dir / f"{lecture_id}.json"
+        write_chunks(chunks_path, payload.chunks)
+
+        job = Job(
+            id=lecture_id,
+            status=JobStatus.done,
+            created_at=now,
+            updated_at=now,
+            source_filename=payload.source_filename,
+            script_path=str(script_path),
+            audio_path=None,
+            duration_sec=payload.lecture_script.duration_estimate_sec,
+        )
+        lecture = Lecture(
+            id=lecture_id,
+            title=payload.title or payload.lecture_script.title,
+            source_filename=payload.source_filename,
+            created_at=now,
+            updated_at=now,
+            status=LectureStatus.done,
+            lecture_script_json_path=str(script_path),
+            chunks_json_path=str(chunks_path),
+            duration_sec=payload.lecture_script.duration_estimate_sec,
+        )
+        session.add(job)
+        session.add(lecture)
+        session.add(OutputRecord(job_id=lecture_id, kind="script", path=str(script_path)))
+        session.add(OutputRecord(job_id=lecture_id, kind="chunks", path=str(chunks_path)))
+        session.commit()
+
+        if settings.enable_rss:
+            jobs = session.exec(select(Job)).all()
+            generate_feed(jobs, settings.rss_dir / "feed.xml")
+
+    return PreprocessedUploadResponse(lecture_id=lecture_id, status=LectureStatus.done)
+
+
+@app.get("/lectures/{lecture_id}/status", response_model=LectureStatusResponse)
+def lecture_status(lecture_id: str) -> LectureStatusResponse:
+    with get_session(engine) as session:
+        lecture = _get_or_create_lecture(session, lecture_id)
+        if not lecture:
+            raise HTTPException(status_code=404, detail="Lecture not found")
+        chunks_ready = bool(lecture.chunks_json_path and Path(lecture.chunks_json_path).exists())
+        script_ready = bool(
+            lecture.lecture_script_json_path and Path(lecture.lecture_script_json_path).exists()
+        )
+        return LectureStatusResponse(
+            lecture_id=lecture.id,
+            title=lecture.title,
+            status=lecture.status,
+            script_ready=script_ready,
+            chunks_ready=chunks_ready,
+        )
 
 
 @app.get("/jobs/{job_id}", response_model=JobResponse)
@@ -362,6 +443,8 @@ def create_realtime_token(lecture_id: str, request: Request):
 
 @app.get("/feed.xml")
 def feed():
+    if not settings.enable_rss:
+        raise HTTPException(status_code=404, detail="RSS feed disabled")
     with get_session(engine) as session:
         jobs = session.exec(select(Job)).all()
         xml = generate_feed(jobs, settings.rss_dir / "feed.xml")

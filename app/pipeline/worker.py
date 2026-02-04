@@ -134,9 +134,24 @@ class Worker:
                 write_chunks(chunks_path, chunks)
                 lecture.chunks_json_path = str(chunks_path)
 
-                self._update_status(job, lecture, JobStatus.tts)
                 job.script_path = str(script_path)
                 job.duration_sec = script.duration_estimate_sec
+                session.add(job)
+                session.add(lecture)
+                session.commit()
+
+                if not settings.enable_audio_generation:
+                    self._update_status(job, lecture, JobStatus.done)
+                    session.add(job)
+                    session.add(lecture)
+                    session.commit()
+                    self.logger.info("Job %s done (audio disabled)", job_id)
+                    if settings.enable_rss:
+                        jobs = session.exec(select(Job)).all()
+                        generate_feed(jobs, settings.rss_dir / "feed.xml")
+                    return
+
+                self._update_status(job, lecture, JobStatus.tts)
                 session.add(job)
                 session.add(lecture)
                 session.commit()
@@ -170,8 +185,9 @@ class Worker:
                 self.logger.info("Job %s done", job_id)
 
                 # Update RSS feed
-                jobs = session.exec(select(Job)).all()
-                generate_feed(jobs, settings.rss_dir / "feed.xml")
+                if settings.enable_rss:
+                    jobs = session.exec(select(Job)).all()
+                    generate_feed(jobs, settings.rss_dir / "feed.xml")
 
             except Exception as exc:
                 self.logger.exception("Job %s failed", job_id)

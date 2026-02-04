@@ -36,6 +36,7 @@ class Settings(BaseModel):
     openai_tts_format: str = Field(default="m4a")
     openai_realtime_model: str = Field(default="gpt-realtime")
     openai_realtime_voice: str = Field(default="alloy")
+    upload_token: Optional[str] = Field(default=None)
 
     # Processing
     max_pages_per_chunk: int = Field(default=3)
@@ -43,6 +44,8 @@ class Settings(BaseModel):
     chunk_target_seconds: int = Field(default=15)
     chunk_words_per_second: float = Field(default=2.5)
     realtime_rate_limit_per_min: int = Field(default=10)
+    enable_audio_generation: bool = Field(default=False)
+    enable_rss: bool = Field(default=False)
     cors_allow_origins: List[str] = Field(
         default_factory=lambda: [
             "http://localhost:3000",
@@ -59,6 +62,12 @@ class Settings(BaseModel):
     def from_env(cls) -> "Settings":
         def _p(name: str, default: Optional[str] = None) -> Optional[str]:
             return os.environ.get(name, default)
+
+        def _bool(name: str, default: bool) -> bool:
+            value = os.environ.get(name)
+            if value is None:
+                return default
+            return value.strip().lower() in {"1", "true", "yes", "on"}
 
         ios_dir = _p("IOS_SYNC_DIR")
         origins_env = _p("CORS_ALLOW_ORIGINS", "")
@@ -83,11 +92,14 @@ class Settings(BaseModel):
             openai_tts_format=_p("OPENAI_TTS_FORMAT", "m4a"),
             openai_realtime_model=_p("OPENAI_REALTIME_MODEL", "gpt-realtime"),
             openai_realtime_voice=_p("OPENAI_REALTIME_VOICE", "alloy"),
+            upload_token=_p("UPLOAD_TOKEN"),
             max_pages_per_chunk=int(_p("MAX_PAGES_PER_CHUNK", "3")),
             worker_poll_interval_sec=float(_p("WORKER_POLL_INTERVAL_SEC", "0.5")),
             chunk_target_seconds=int(_p("CHUNK_TARGET_SECONDS", "15")),
             chunk_words_per_second=float(_p("CHUNK_WORDS_PER_SECOND", "2.5")),
             realtime_rate_limit_per_min=int(_p("REALTIME_RATE_LIMIT_PER_MIN", "10")),
+            enable_audio_generation=_bool("ENABLE_AUDIO_GENERATION", False),
+            enable_rss=_bool("ENABLE_RSS", False),
             cors_allow_origins=origins,
             ios_sync_dir=Path(ios_dir).expanduser() if ios_dir else None,
         )

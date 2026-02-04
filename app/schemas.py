@@ -112,5 +112,26 @@ class UploadResponse(BaseModel):
     job_id: str
 
 
+class PreprocessedLectureUpload(BaseModel):
+    lecture_id: Optional[str] = None
+    title: Optional[str] = None
+    source_filename: Optional[str] = None
+    lecture_script: LectureScript
+    chunks: List[LectureChunk]
+
+
+class PreprocessedUploadResponse(BaseModel):
+    lecture_id: str
+    status: LectureStatus
+
+
+class LectureStatusResponse(BaseModel):
+    lecture_id: str
+    title: Optional[str] = None
+    status: LectureStatus
+    script_ready: bool
+    chunks_ready: bool
+
+
 class HealthResponse(BaseModel):
     status: str

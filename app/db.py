@@ -72,7 +72,7 @@ class OutputRecord(SQLModel, table=True):
 VALID_TRANSITIONS = {
     JobStatus.queued: {JobStatus.extracting, JobStatus.failed},
     JobStatus.extracting: {JobStatus.scripting, JobStatus.failed},
-    JobStatus.scripting: {JobStatus.tts, JobStatus.failed},
+    JobStatus.scripting: {JobStatus.tts, JobStatus.done, JobStatus.failed},
     JobStatus.tts: {JobStatus.syncing, JobStatus.failed},
     JobStatus.syncing: {JobStatus.done, JobStatus.failed},
     JobStatus.done: set(),
