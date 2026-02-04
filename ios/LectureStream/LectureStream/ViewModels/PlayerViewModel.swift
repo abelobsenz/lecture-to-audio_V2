@@ -7,6 +7,7 @@ final class PlayerViewModel: ObservableObject {
         case idle
         case connecting
         case playing
+        case paused
         case interrupted
         case answering
         case waitingToResume
@@ -49,6 +50,7 @@ final class PlayerViewModel: ObservableObject {
     private var chunkIndex: Int = 0
     private var recentChunks: [RecentChunk] = []
     private var interruptObserver: NSObjectProtocol?
+    private let progressKeyPrefix = "lectureProgress."
 
     init(lectureId: String, settings: SettingsStore) {
         self.lectureId = lectureId
@@ -129,7 +131,7 @@ final class PlayerViewModel: ObservableObject {
         }
     }
 
-    func startPlayback() {
+    func startPlayback(resumeFromSaved: Bool = true) {
         playbackTask?.cancel()
         realtime.disconnect()
         responseContinuation = nil
@@ -142,7 +144,12 @@ final class PlayerViewModel: ObservableObject {
         activeChunkIndex = nil
         pendingQuestionTask?.cancel()
         isMicEnabled = false
-        chunkIndex = 0
+        if resumeFromSaved, let saved = loadSavedProgress() {
+            chunkIndex = saved
+        } else {
+            chunkIndex = 0
+            clearSavedProgress()
+        }
         recentChunks = []
         recentContextText = ""
         currentChunkText = ""
@@ -153,14 +160,30 @@ final class PlayerViewModel: ObservableObject {
         updateNowPlayingInfo()
     }
 
-    func reconnect() {
-        realtime.disconnect()
-        startPlayback()
+    func restartPlayback() {
+        clearSavedProgress()
+        startPlayback(resumeFromSaved: false)
     }
 
     func stop() {
         playbackTask?.cancel()
+        saveCurrentProgress()
         resumeAfterResponse()
+        realtime.disconnect()
+    }
+
+    func pausePlayback() {
+        guard state == .playing || state == .waitingToResume || state == .answering else { return }
+        saveCurrentProgress()
+        if realtime.isResponseActive {
+            realtime.cancelResponse()
+        }
+        playbackTask?.cancel()
+        state = .paused
+        resumeAfterResponse()
+        isMicEnabled = false
+        realtime.setRemoteAudioMuted(true)
+        realtime.setMicrophoneEnabled(false)
         realtime.disconnect()
     }
 
@@ -248,6 +271,7 @@ final class PlayerViewModel: ObservableObject {
             isMicEnabled = false
             state = .playing
             await loadLecture()
+            clampProgressIfNeeded()
             updateNowPlayingInfo()
             await playLoop()
         } catch {
@@ -289,6 +313,7 @@ final class PlayerViewModel: ObservableObject {
                     }
                     updateRecentContext(with: chunk)
                     chunkIndex += 1
+                    saveProgress(chunkIndex)
                     activeChunkIndex = nil
                 } else if state == .playing && pendingRetryChunk {
                     // Replay the same chunk after an interruption to avoid skipping content.
@@ -300,6 +325,7 @@ final class PlayerViewModel: ObservableObject {
                 }
                 if let detail = lectureDetail, chunkIndex >= detail.numChunks {
                     state = .finished
+                    clearSavedProgress()
                     break
                 }
             } catch {
@@ -493,6 +519,37 @@ final class PlayerViewModel: ObservableObject {
             MPMediaItemPropertyTitle: title,
             MPMediaItemPropertyArtist: "LectureStream"
         ]
+    }
+
+    private func progressKey() -> String {
+        "\(progressKeyPrefix)\(lectureId)"
+    }
+
+    private func loadSavedProgress() -> Int? {
+        let value = UserDefaults.standard.integer(forKey: progressKey())
+        return value > 0 ? value : nil
+    }
+
+    private func saveProgress(_ index: Int) {
+        guard index >= 0 else { return }
+        UserDefaults.standard.set(index, forKey: progressKey())
+    }
+
+    private func saveCurrentProgress() {
+        let resumeIndex = activeChunkIndex ?? chunkIndex
+        saveProgress(resumeIndex)
+    }
+
+    private func clearSavedProgress() {
+        UserDefaults.standard.removeObject(forKey: progressKey())
+    }
+
+    private func clampProgressIfNeeded() {
+        guard let detail = lectureDetail else { return }
+        if chunkIndex >= detail.numChunks {
+            chunkIndex = 0
+            clearSavedProgress()
+        }
     }
 
 }

@@ -93,17 +93,17 @@ struct PlayerView: View {
             .buttonStyle(.borderedProminent)
 
             Button(action: {
-                viewModel.interruptPlayback()
+                viewModel.pausePlayback()
             }) {
-                Label("Interrupt", systemImage: "pause.circle")
+                Label("Pause", systemImage: "pause.fill")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)
 
             Button(action: {
-                viewModel.reconnect()
+                viewModel.restartPlayback()
             }) {
-                Label("Reconnect", systemImage: "arrow.clockwise")
+                Label("Restart", systemImage: "backward.end")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(.bordered)

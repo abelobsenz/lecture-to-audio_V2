@@ -89,7 +89,7 @@ def _load_script_outline(script_path: Path) -> list[str]:
 def build_realtime_instructions(title: str | None, outline: list[str]) -> str:
     parts = [
         "You are a lecturer delivering a clear, engaging lecture.",
-        "Speak naturally and at a steady pace.",
+        "Speak naturally and at a steady pace, using vivid language and concrete examples.",
         "You will receive lecture chunks from the client; read them aloud verbatim as narration.",
         "If the user interrupts with STOP and a question, answer using the provided recent context and lecture outline.",
         "If the user says 'forge ahead', continue from the next chunk.",
@@ -284,7 +284,7 @@ def get_audio(job_id: str):
 
 
 @app.get("/lectures", response_model=list[LectureSummary])
-def list_lectures():
+def list_lectures(include_missing: bool = Query(default=False)):
     with get_session(engine) as session:
         lectures = session.exec(select(Lecture)).all()
         jobs = session.exec(select(Job)).all()
@@ -292,6 +292,17 @@ def list_lectures():
         for job in jobs:
             if job.id not in existing_ids:
                 lectures.append(ensure_lecture(session, job))
+        if not include_missing:
+            filtered: list[Lecture] = []
+            for lecture in lectures:
+                if lecture.status != LectureStatus.done:
+                    filtered.append(lecture)
+                    continue
+                chunks_path = lecture.chunks_json_path
+                script_path = lecture.lecture_script_json_path
+                if chunks_path and Path(chunks_path).exists() and script_path and Path(script_path).exists():
+                    filtered.append(lecture)
+            lectures = filtered
         lectures.sort(key=lambda item: item.created_at, reverse=True)
         items: list[LectureSummary] = []
         for lecture in lectures:

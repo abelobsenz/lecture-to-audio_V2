@@ -16,7 +16,7 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 import httpx
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from openai import OpenAI
 
@@ -63,6 +63,24 @@ HTML = """<!doctype html>
     h1 { margin: 0; font-weight: 700; letter-spacing: -0.02em; }
     .sub { color: var(--muted); margin-top: 6px; }
     .wrap { padding: 20px 40px 60px; display: grid; gap: 18px; }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      background: var(--card);
+      border-radius: 14px;
+      padding: 12px 14px;
+      border: 1px solid #f0e7d8;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+    }
+    select {
+      font-family: inherit;
+      border-radius: 10px;
+      padding: 6px 10px;
+      border: 1px solid #d9d0c1;
+      background: #fff;
+    }
     .drop {
       border: 2px dashed #7a7a7a;
       border-radius: 18px;
@@ -121,12 +139,22 @@ HTML = """<!doctype html>
     <div class="sub">Drag a PDF to process locally and stream from your server.</div>
   </header>
   <div class="wrap">
+    <div class="controls">
+      <strong>Detail depth</strong>
+      <select id="depth">
+        <option value="low">Low (overview)</option>
+        <option value="medium" selected>Medium (balanced)</option>
+        <option value="high">High (max detail)</option>
+      </select>
+      <span class="sub">High keeps more technical detail from the analyzer.</span>
+    </div>
     <div id="drop" class="drop">Drop PDF files here</div>
     <div id="cards" class="grid"></div>
   </div>
   <script>
     const drop = document.getElementById('drop');
     const cards = document.getElementById('cards');
+    const depthSelect = document.getElementById('depth');
     const steps = ['queued','analyzing','scripting','chunking','uploading','done'];
 
     const makeCard = (file) => {
@@ -217,6 +245,7 @@ HTML = """<!doctype html>
         });
         const form = new FormData();
         form.append('file', file);
+        form.append('depth', depthSelect.value);
         const resp = await fetch('/process', { method: 'POST', body: form });
         const data = await resp.json();
         if (!resp.ok) {
@@ -239,9 +268,11 @@ def _ensure_dirs() -> None:
         Path(path).mkdir(parents=True, exist_ok=True)
 
 
-def _process_pdf_local(client: OpenAI, pdf_path: Path, lecture_id: str, title_hint: str) -> dict:
+def _process_pdf_local(
+    client: OpenAI, pdf_path: Path, lecture_id: str, title_hint: str, depth: str
+) -> dict:
     chunks = analyze_pdf_chunks(client, pdf_path)
-    script = merge_chunks_to_script(client, [c.data for c in chunks], title_hint)
+    script = merge_chunks_to_script(client, [c.data for c in chunks], title_hint, depth=depth)
     lecture_chunks = generate_lecture_chunks(script)
 
     script_path = settings.scripts_dir / f"{lecture_id}_lecture_script.json"
@@ -264,7 +295,7 @@ def index() -> HTMLResponse:
 
 
 @APP.post("/process")
-async def process(file: UploadFile = File(...)) -> JSONResponse:
+async def process(file: UploadFile = File(...), depth: str = Form("medium")) -> JSONResponse:
     if SERVER_URL is None:
         raise HTTPException(status_code=500, detail="Server URL not configured")
     if not settings.openai_api_key:
@@ -295,7 +326,7 @@ async def process(file: UploadFile = File(...)) -> JSONResponse:
                 JOBS[job_id].update({"status": "analyzing", "progress": 20, "message": "Analyzing PDF pages."})
             client = OpenAI(api_key=settings.openai_api_key)
             payload = await asyncio.to_thread(
-                _process_pdf_local, client, upload_path, job_id, upload_path.stem
+                _process_pdf_local, client, upload_path, job_id, upload_path.stem, depth
             )
             with JOBS_LOCK:
                 JOBS[job_id].update({"status": "scripting", "progress": 55, "message": "Drafting lecture script."})

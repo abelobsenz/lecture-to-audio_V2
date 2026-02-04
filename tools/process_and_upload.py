@@ -90,6 +90,12 @@ def main() -> None:
         help="Upload token (or set UPLOAD_TOKEN in env)",
     )
     parser.add_argument(
+        "--depth",
+        default="medium",
+        choices=["low", "medium", "high"],
+        help="Detail depth for script generation",
+    )
+    parser.add_argument(
         "--sync-data",
         default=None,
         help="Sync an existing local data folder to the server (e.g. data)",
@@ -99,9 +105,6 @@ def main() -> None:
 
     if not args.store_only and not args.server and not args.sync_data:
         raise SystemExit("--server is required unless --store-only is set")
-
-    if not settings.openai_api_key:
-        raise SystemExit("OPENAI_API_KEY not set")
 
     _ensure_dirs()
     server_url = args.server.rstrip("/") if args.server else None
@@ -116,6 +119,9 @@ def main() -> None:
         _sync_data_folder(data_dir, server_url, headers)
         return
 
+    if not settings.openai_api_key:
+        raise SystemExit("OPENAI_API_KEY not set")
+
     if not args.path:
         raise SystemExit("Path to PDF or folder is required")
     input_path = Path(args.path)
@@ -129,7 +135,7 @@ def main() -> None:
         title_hint = args.title or pdf_path.stem
 
         chunks = analyze_pdf_chunks(client, pdf_path)
-        script = merge_chunks_to_script(client, [c.data for c in chunks], title_hint)
+        script = merge_chunks_to_script(client, [c.data for c in chunks], title_hint, depth=args.depth)
         lecture_chunks = generate_lecture_chunks(script)
 
         script_path = settings.scripts_dir / f"{lecture_id}_lecture_script.json"
