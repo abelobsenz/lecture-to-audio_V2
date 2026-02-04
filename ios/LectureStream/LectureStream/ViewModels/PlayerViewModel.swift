@@ -144,18 +144,24 @@ final class PlayerViewModel: ObservableObject {
     }
 
     func interruptPlayback() {
-        guard state == .playing else { return }
+        if state == .playing {
+            state = .interrupted
+            interruptedDuringChunk = true
+            pendingRetryChunk = true
+            if let active = activeChunkIndex {
+                rollbackChunkIndex = active
+            } else {
+                rollbackChunkIndex = chunkIndex
+            }
+            if realtime.isResponseActive {
+                realtime.cancelResponse()
+            }
+            isMicEnabled = true
+            realtime.setMicrophoneEnabled(true)
+            return
+        }
+        guard state == .waitingToResume || state == .interrupted else { return }
         state = .interrupted
-        interruptedDuringChunk = true
-        pendingRetryChunk = true
-        if let active = activeChunkIndex {
-            rollbackChunkIndex = active
-        } else {
-            rollbackChunkIndex = chunkIndex
-        }
-        if realtime.isResponseActive {
-            realtime.cancelResponse()
-        }
         isMicEnabled = true
         realtime.setMicrophoneEnabled(true)
     }

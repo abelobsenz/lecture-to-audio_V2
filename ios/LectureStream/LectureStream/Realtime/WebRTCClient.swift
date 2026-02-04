@@ -25,7 +25,7 @@ final class WebRTCClient: NSObject {
     }
 
     func connect(ephemeralKey: String) async throws {
-        try AudioSessionManager.shared.activateForPlaybackAndRecord()
+        try AudioSessionManager.shared.activateForPlayback()
 
         let config = RTCConfiguration()
         config.sdpSemantics = .unifiedPlan
@@ -84,7 +84,21 @@ final class WebRTCClient: NSObject {
     }
 
     func setMicrophoneEnabled(_ enabled: Bool) {
-        localAudioTrack?.isEnabled = enabled
+        if enabled {
+            do {
+                try AudioSessionManager.shared.activateForPlaybackAndRecord()
+            } catch {
+                print("WebRTC: failed to activate playAndRecord: \(error)")
+            }
+            localAudioTrack?.isEnabled = true
+        } else {
+            localAudioTrack?.isEnabled = false
+            do {
+                try AudioSessionManager.shared.activateForPlayback()
+            } catch {
+                print("WebRTC: failed to activate playback: \(error)")
+            }
+        }
     }
 
     private static func sendOfferToOpenAI(_ sdp: String, ephemeralKey: String) async throws -> String {

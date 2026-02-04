@@ -5,6 +5,15 @@ final class AudioSessionManager {
     static let shared = AudioSessionManager()
     private init() {}
 
+    func activateForPlayback() throws {
+        let session = AVAudioSession.sharedInstance()
+        try session.setCategory(.playback, mode: .default, options: [.allowAirPlay])
+        try session.setActive(true, options: .notifyOthersOnDeactivation)
+
+        let rtcSession = RTCAudioSession.sharedInstance()
+        rtcSession.isAudioEnabled = true
+    }
+
     func activateForPlaybackAndRecord() throws {
         let session = AVAudioSession.sharedInstance()
         try session.setCategory(.playAndRecord, mode: .voiceChat, options: [.allowBluetoothHFP, .defaultToSpeaker])
