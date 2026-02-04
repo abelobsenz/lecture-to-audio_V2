@@ -1,0 +1,435 @@
+[
+  {
+    "chunk_id": 0,
+    "approx_seconds": 17,
+    "text": "Today we study how VIX options and standard European options behave when maturity becomes very small, in a model that combines local-stochastic volatility with compound-Poisson jumps. The practical motivation is straightforward: short-dated options are extremely sensitive to rare events.",
+    "spoken_math": null,
+    "section_name": "1) Motivation, contracts, and the short-maturity question",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 1,
+    "approx_seconds": 18,
+    "text": "If you ignore jumps, you often severely underprice out-of-the-money options close to expiry. The paper\u2019s goal is to make that statement precise, and to provide explicit leading-order formulas you can compute in closed form for several jump-size models.",
+    "spoken_math": null,
+    "section_name": "1) Motivation, contracts, and the short-maturity question",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 2,
+    "approx_seconds": 21,
+    "text": "We\u2019ll begin by fixing the financial objects. First, VIX is defined under the risk-neutral measure as a particular conditional expectation of future log-returns over a window of length tau. Then VIX calls and puts are just standard European-style payoffs written on the random variable VIX at option maturity T.",
+    "spoken_math": null,
+    "section_name": "1) Motivation, contracts, and the short-maturity question",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 3,
+    "approx_seconds": 21,
+    "text": "The overall asymptotic regime is: option maturity T goes to zero. Often, we also let the VIX averaging window tau go to zero to obtain a tractable proxy for VIX itself. A key theme will be that the order of magnitude differs dramatically between out-of-the-money and at-the-money payoffs.",
+    "spoken_math": null,
+    "section_name": "1) Motivation, contracts, and the short-maturity question",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 4,
+    "approx_seconds": 15,
+    "text": "We\u2019ll set up the baseline local-stochastic volatility diffusion first, and then extend it to jumps. In the next chapter we\u2019ll see how the VIX definition simplifies, and where the jump correction constant kappa comes from.",
+    "spoken_math": null,
+    "section_name": "1) Motivation, contracts, and the short-maturity question",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 5,
+    "approx_seconds": 2,
+    "text": "Pause for five seconds.",
+    "spoken_math": null,
+    "section_name": "1) Motivation, contracts, and the short-maturity question",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 6,
+    "approx_seconds": 90,
+    "text": "VIX squared at time t equals minus two over tau times the conditional risk-neutral expectation of the log of S at t plus tau divided by S at t, plus two over tau times the conditional expectation of the integral from t to t plus tau of d S over S just before the move. This expresses VIX as an expected future variance measure over a window tau, with an extra term that accounts for jump contributions in the price process. A VIX call with strike K and maturity T is the discount factor e to the minus r T times the expectation of VIX at T minus K, floored at zero. The VIX put is the same with K minus VIX at T. Once we can approximate the distribution of VIX at short horizons, these expectations turn into asymptotic pricing formulas. In the baseline local-stochastic volatility model without jumps, d S over S equals eta of S times square root of V times d W plus r minus q times d t. And d V over V equals sigma of V times d Z plus mu of V times d t. The Brownian motions W and Z can be correlated. Eta makes volatility depend on the spot level, while V is a stochastic variance factor. Correlation captures leverage between spot and volatility.",
+    "spoken_math": [
+      "VIX squared at time t equals minus two over tau times the conditional risk-neutral expectation of the log of S at t plus tau divided by S at t, plus two over tau times the conditional expectation of the integral from t to t plus tau of d S over S just before the move.",
+      "This expresses VIX as an expected future variance measure over a window tau, with an extra term that accounts for jump contributions in the price process.",
+      "A VIX call with strike K and maturity T is the discount factor e to the minus r T times the expectation of VIX at T minus K, floored at zero. The VIX put is the same with K minus VIX at T.",
+      "Once we can approximate the distribution of VIX at short horizons, these expectations turn into asymptotic pricing formulas.",
+      "In the baseline local-stochastic volatility model without jumps, d S over S equals eta of S times square root of V times d W plus r minus q times d t. And d V over V equals sigma of V times d Z plus mu of V times d t. The Brownian motions W and Z can be correlated.",
+      "Eta makes volatility depend on the spot level, while V is a stochastic variance factor. Correlation captures leverage between spot and volatility."
+    ],
+    "section_name": "1) Motivation, contracts, and the short-maturity question",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 7,
+    "approx_seconds": 17,
+    "text": "Now we extend the diffusion to include three jump channels: idiosyncratic jumps in the asset, idiosyncratic jumps in variance, and common jumps that move both simultaneously. Each jump channel is compound Poisson: arrivals are Poisson with intensity lambda, and jump sizes are random.",
+    "spoken_math": null,
+    "section_name": "2) Adding compound-Poisson jumps and the VIX small-window proxy",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 8,
+    "approx_seconds": 20,
+    "text": "The asset jumps are modeled multiplicatively, so a jump of size Y changes S by a factor e to the Y. The same multiplicative idea is used for V to preserve positivity. A crucial step in the paper is simplifying the VIX definition when the VIX averaging window tau is small.",
+    "spoken_math": null,
+    "section_name": "2) Adding compound-Poisson jumps and the VIX small-window proxy",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 9,
+    "approx_seconds": 22,
+    "text": "In that regime, the time-average of the instantaneous variance term collapses to the instantaneous value at time T. But the jump part does not vanish; it leaves behind a constant adjustment called kappa. So in the small-tau limit, VIX squared behaves like eta of S at T squared times V at T, plus kappa.",
+    "spoken_math": null,
+    "section_name": "2) Adding compound-Poisson jumps and the VIX small-window proxy",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 10,
+    "approx_seconds": 25,
+    "text": "This is powerful because it reduces the VIX, which is defined via a conditional expectation over a future window, to an almost-European function of the state variables at time T. The paper then provides error bounds showing that replacing VIX by the square root of this proxy is controlled, with errors going to zero as tau goes to zero under regularity assumptions.",
+    "spoken_math": null,
+    "section_name": "2) Adding compound-Poisson jumps and the VIX small-window proxy",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 11,
+    "approx_seconds": 16,
+    "text": "This sets up the next chapter: once VIX is approximated as a European-style payoff on the state at time T, we can do short-maturity asymptotics in T and isolate what comes from diffusion and what comes from jumps.",
+    "spoken_math": null,
+    "section_name": "2) Adding compound-Poisson jumps and the VIX small-window proxy",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 12,
+    "approx_seconds": 2,
+    "text": "Pause for five seconds.",
+    "spoken_math": null,
+    "section_name": "2) Adding compound-Poisson jumps and the VIX small-window proxy",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 13,
+    "approx_seconds": 134,
+    "text": "With jumps, d S over S equals the same diffusion term, plus a drift corrected by subtracting lambda S times mu S and lambda C times mu C S, plus an idiosyncratic S jump increment and a common S jump increment. The drift is compensated so the discounted asset price remains a martingale under the risk-neutral measure when jumps are present. For variance, d V over V equals sigma of V times d Z plus mu of V times d t, plus an idiosyncratic V jump increment and a common V jump increment. Variance can jump suddenly, which is empirically important for volatility products like VIX. VIX squared at time T equals one over tau times the conditional expectation of the integral from T to T plus tau of eta squared of S times V, d s, plus kappa. This separates the continuous-variance contribution from a deterministic jump correction. Kappa is defined as two lambda S times mu S plus two lambda C times mu C S, minus two lambda S times m S, minus two lambda C times m C S. Here mu denotes the expectation of e to the jump size minus one, and m denotes the mean of the jump size itself. Because e to the Y minus one is typically larger than Y on average, kappa is nonnegative and acts as an upward shift in the VIX-squared proxy. As tau goes to zero, VIX squared at time T converges almost surely to eta squared of S at T times V at T plus kappa. A shrinking averaging window turns the time-average into an instantaneous value, while the jump correction remains as a constant. A VIX call price is approximated by the discounted expectation of the positive part of the square root of eta squared of S at T times V at T plus kappa, minus K. This turns VIX option pricing into a standard European expectation on the state at time T, enabling short-time expansions.",
+    "spoken_math": [
+      "With jumps, d S over S equals the same diffusion term, plus a drift corrected by subtracting lambda S times mu S and lambda C times mu C S, plus an idiosyncratic S jump increment and a common S jump increment.",
+      "The drift is compensated so the discounted asset price remains a martingale under the risk-neutral measure when jumps are present.",
+      "For variance, d V over V equals sigma of V times d Z plus mu of V times d t, plus an idiosyncratic V jump increment and a common V jump increment.",
+      "Variance can jump suddenly, which is empirically important for volatility products like VIX.",
+      "VIX squared at time T equals one over tau times the conditional expectation of the integral from T to T plus tau of eta squared of S times V, d s, plus kappa.",
+      "This separates the continuous-variance contribution from a deterministic jump correction.",
+      "Kappa is defined as two lambda S times mu S plus two lambda C times mu C S, minus two lambda S times m S, minus two lambda C times m C S. Here mu denotes the expectation of e to the jump size minus one, and m denotes the mean of the jump size itself.",
+      "Because e to the Y minus one is typically larger than Y on average, kappa is nonnegative and acts as an upward shift in the VIX-squared proxy.",
+      "As tau goes to zero, VIX squared at time T converges almost surely to eta squared of S at T times V at T plus kappa.",
+      "A shrinking averaging window turns the time-average into an instantaneous value, while the jump correction remains as a constant.",
+      "A VIX call price is approximated by the discounted expectation of the positive part of the square root of eta squared of S at T times V at T plus kappa, minus K.",
+      "This turns VIX option pricing into a standard European expectation on the state at time T, enabling short-time expansions."
+    ],
+    "section_name": "2) Adding compound-Poisson jumps and the VIX small-window proxy",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 14,
+    "approx_seconds": 21,
+    "text": "We now get to the headline asymptotic message. For out-of-the-money options as maturity T goes to zero, the leading contribution comes from the event that exactly one jump occurs. The probability of one Poisson jump in a short interval is proportional to T, so the option price scales like T.",
+    "spoken_math": null,
+    "section_name": "3) Universal short-maturity behavior: OTM is linear in T, ATM is square-root in T",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 15,
+    "approx_seconds": 15,
+    "text": "The diffusion part would require an atypically large Gaussian move to cross the strike in vanishing time, which is exponentially unlikely, so it does not appear at leading order. For at-the-money options, the story flips.",
+    "spoken_math": null,
+    "section_name": "3) Universal short-maturity behavior: OTM is linear in T, ATM is square-root in T",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 16,
+    "approx_seconds": 24,
+    "text": "A small Gaussian fluctuation is enough to generate a nontrivial payoff, and typical diffusion fluctuations are of size square root of T. So ATM option prices scale like square root of T. Jump events are still only order T, which is smaller than square root of T for small T, so jumps are negligible at the leading ATM order.",
+    "spoken_math": null,
+    "section_name": "3) Universal short-maturity behavior: OTM is linear in T, ATM is square-root in T",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 17,
+    "approx_seconds": 22,
+    "text": "The paper formalizes this for both VIX options and standard European options. For OTM VIX options, the leading coefficient is a sum of three terms\u2014one from idiosyncratic S jumps, one from common jumps, and one from idiosyncratic V jumps\u2014each an integral of the payoff evaluated after a single jump, weighted by the corresponding intensity.",
+    "spoken_math": null,
+    "section_name": "3) Universal short-maturity behavior: OTM is linear in T, ATM is square-root in T",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 18,
+    "approx_seconds": 31,
+    "text": "For OTM European options on S, only S-moving jumps matter at leading order, so you see idiosyncratic S jumps and common jumps, but not idiosyncratic V jumps. Then, for ATM results, we get explicit closed-form prefactors: for European options, it\u2019s the local instantaneous volatility eta of S zero times square root of V zero divided by square root of two pi; for ATM VIX options, a more complex prefactor appears involving derivatives and correlation.",
+    "spoken_math": null,
+    "section_name": "3) Universal short-maturity behavior: OTM is linear in T, ATM is square-root in T",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 19,
+    "approx_seconds": 14,
+    "text": "In the next chapter we\u2019ll see how these general formulas become explicit numbers under concrete jump-size models like Eraker\u2019s SVCJ and the Kou-type double-exponential model. Pause for five seconds.",
+    "spoken_math": null,
+    "section_name": "3) Universal short-maturity behavior: OTM is linear in T, ATM is square-root in T",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 20,
+    "approx_seconds": 97,
+    "text": "In the out-of-the-money VIX call case, if the initial proxy VIX squared is below K squared, then as tau goes to zero and then T goes to zero, the call price divided by T converges to: lambda S times the expected call payoff after one S jump, plus lambda C times the expected payoff after one common jump in S and V, plus lambda V times the expected payoff after one V jump. Each expectation is written as an integral against the corresponding jump-size distribution. This is the single-jump principle: in very short time, an OTM option becomes valuable mainly if one jump arrives and moves the state across the strike. For an out-of-the-money European call with S zero below K, the call price divided by T converges to lambda S times the expected payoff after one idiosyncratic S jump, plus lambda C times the expected payoff after one common jump, integrating over the joint common-jump law. Only jumps that move the asset price itself can switch an OTM call into the money in vanishing time. At the money, when K equals S zero, the European call price divided by square root of T converges to eta of S zero times square root of V zero, divided by square root of two pi. This is the universal short-time ATM behavior driven by Gaussian diffusion; jumps are too rare to matter at this order.",
+    "spoken_math": [
+      "In the out-of-the-money VIX call case, if the initial proxy VIX squared is below K squared, then as tau goes to zero and then T goes to zero, the call price divided by T converges to: lambda S times the expected call payoff after one S jump, plus lambda C times the expected payoff after one common jump in S and V, plus lambda V times the expected payoff after one V jump. Each expectation is written as an integral against the corresponding jump-size distribution.",
+      "This is the single-jump principle: in very short time, an OTM option becomes valuable mainly if one jump arrives and moves the state across the strike.",
+      "For an out-of-the-money European call with S zero below K, the call price divided by T converges to lambda S times the expected payoff after one idiosyncratic S jump, plus lambda C times the expected payoff after one common jump, integrating over the joint common-jump law.",
+      "Only jumps that move the asset price itself can switch an OTM call into the money in vanishing time.",
+      "At the money, when K equals S zero, the European call price divided by square root of T converges to eta of S zero times square root of V zero, divided by square root of two pi.",
+      "This is the universal short-time ATM behavior driven by Gaussian diffusion; jumps are too rare to matter at this order."
+    ],
+    "section_name": "3) Universal short-maturity behavior: OTM is linear in T, ATM is square-root in T",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 21,
+    "approx_seconds": 27,
+    "text": "General integral formulas are useful, but practitioners want parameters and closed forms. The paper therefore studies several jump-size specifications and computes the leading OTM coefficients explicitly. First is the Eraker-style SVCJ model: idiosyncratic log-price jumps are Gaussian, variance jumps are exponential and strictly positive, and common jumps have an exponential variance component with a conditionally Gaussian asset component whose mean depends on the variance jump.",
+    "spoken_math": null,
+    "section_name": "4) Plug-in jump-size models: Eraker, Kou-type, and folded-normal",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 22,
+    "approx_seconds": 21,
+    "text": "This structure captures the empirically observed pattern: volatility jumps upward, and the asset tends to jump downward at the same time through a negative dependence parameter. Second is a Kou-type model: conditional on the variance common jump, the asset common jump is double-exponential, giving asymmetric heavy tails with different decay rates.",
+    "spoken_math": null,
+    "section_name": "4) Plug-in jump-size models: Eraker, Kou-type, and folded-normal",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 23,
+    "approx_seconds": 30,
+    "text": "Third is a folded-normal specification for the common variance jump: take the absolute value of a normal variable so the variance jump is positive, and keep the asset conditional jump Gaussian. A particularly sharp implication appears across these models: if variance jumps are strictly positive, then an out-of-the-money VIX put\u2014meaning the strike is below the current VIX proxy\u2014cannot be brought into the money by a single variance jump.",
+    "spoken_math": null,
+    "section_name": "4) Plug-in jump-size models: Eraker, Kou-type, and folded-normal",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 24,
+    "approx_seconds": 15,
+    "text": "So its OTM short-maturity coefficient is zero; the remaining diffusion-driven price is much smaller than order T. In contrast, OTM VIX calls remain order T and are largely driven by variance jumps and common jumps.",
+    "spoken_math": null,
+    "section_name": "4) Plug-in jump-size models: Eraker, Kou-type, and folded-normal",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 25,
+    "approx_seconds": 8,
+    "text": "Next, we\u2019ll look at the numerical experiments that compare these asymptotic coefficients to Monte Carlo simulation. Pause for five seconds.",
+    "spoken_math": null,
+    "section_name": "4) Plug-in jump-size models: Eraker, Kou-type, and folded-normal",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 26,
+    "approx_seconds": 61,
+    "text": "In the Eraker model, an idiosyncratic log-price jump size equals alpha S plus sigma S times a standard normal variable. This gives a lognormal multiplicative jump in price with a simple parametric mean and variance. An idiosyncratic variance jump size is exponential with rate eta V, hence it is always positive. Variance spikes are one-sided; positivity drives the zero-leading-term result for OTM VIX puts. For an out-of-the-money VIX put in these positive-variance-jump specifications, the leading short-maturity coefficient is zero. A single jump cannot push VIX downward when variance jumps are positive, so the usual order T jump contribution disappears. For a folded-normal, meaning absolute-normal, variance jump, the mean jump size equals square root of two over pi times sigma C V. This provides a clean calibration rule: choose sigma so the average jump size matches an exponential-jump model\u2019s mean.",
+    "spoken_math": [
+      "In the Eraker model, an idiosyncratic log-price jump size equals alpha S plus sigma S times a standard normal variable.",
+      "This gives a lognormal multiplicative jump in price with a simple parametric mean and variance.",
+      "An idiosyncratic variance jump size is exponential with rate eta V, hence it is always positive.",
+      "Variance spikes are one-sided; positivity drives the zero-leading-term result for OTM VIX puts.",
+      "For an out-of-the-money VIX put in these positive-variance-jump specifications, the leading short-maturity coefficient is zero.",
+      "A single jump cannot push VIX downward when variance jumps are positive, so the usual order T jump contribution disappears.",
+      "For a folded-normal, meaning absolute-normal, variance jump, the mean jump size equals square root of two over pi times sigma C V.",
+      "This provides a clean calibration rule: choose sigma so the average jump size matches an exponential-jump model\u2019s mean."
+    ],
+    "section_name": "4) Plug-in jump-size models: Eraker, Kou-type, and folded-normal",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 27,
+    "approx_seconds": 24,
+    "text": "Finally, the paper validates the theory numerically. The methodology is consistent across experiments: simulate the jump-diffusion model by Euler discretization, compute option payoffs, and compare Monte Carlo prices to the asymptotic predictions. Because OTM jump-driven prices are order T, the paper rescales prices by dividing by lambda C times T, and often multiplies by 1000 to display readable numbers.",
+    "spoken_math": null,
+    "section_name": "5) Numerical validation: asymptotics versus Monte Carlo",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 28,
+    "approx_seconds": 19,
+    "text": "Under this rescaling, the asymptotic theory predicts a curve that should match the Monte Carlo points as T becomes small. For European options in the Eraker and Kou-type models, the rescaled Monte Carlo points line up well with the asymptotic curve away from at-the-money.",
+    "spoken_math": null,
+    "section_name": "5) Numerical validation: asymptotics versus Monte Carlo",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 29,
+    "approx_seconds": 16,
+    "text": "Near ATM, discrepancies are expected because the diffusion-driven square-root-of-T term is not captured by the OTM linear-in-T asymptotic. For VIX calls, the agreement is particularly strong in the out-of-the-money region.",
+    "spoken_math": null,
+    "section_name": "5) Numerical validation: asymptotics versus Monte Carlo",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 30,
+    "approx_seconds": 27,
+    "text": "The plots show a steep decay as the strike rises above the ATM VIX level, and the Monte Carlo points track the predicted curve. Across models, the same qualitative message appears: the short-maturity OTM behavior is governed by single jumps and scales like T; the ATM behavior is diffusion-driven and scales like square root of T; and the quality of approximation improves as maturity decreases.",
+    "spoken_math": null,
+    "section_name": "5) Numerical validation: asymptotics versus Monte Carlo",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 31,
+    "approx_seconds": 15,
+    "text": "Pause for five seconds. Imagine a two-dimensional plot comparing asymptotic theory to Monte Carlo for European options. The horizontal axis is moneyness k equal to strike divided by spot, spanning roughly 0.7 to 1.3.",
+    "spoken_math": null,
+    "section_name": "5) Numerical validation: asymptotics versus Monte Carlo",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 32,
+    "approx_seconds": 22,
+    "text": "The vertical axis is a rescaled quantity: one thousand times the option price divided by lambda C times T, so it is unitless and meant to approximate the asymptotic coefficient. A smooth black curve shows the asymptotic prediction; red dots show Monte Carlo estimates at a fixed maturity, such as T equal to 0.1.",
+    "spoken_math": null,
+    "section_name": "5) Numerical validation: asymptotics versus Monte Carlo",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 33,
+    "approx_seconds": 17,
+    "text": "The black curve is relatively high for put-side moneyness below one and decays on the call side above one. The red dots lie close to the black curve away from k near one, but show noticeable deviations around k equal to one.",
+    "spoken_math": null,
+    "section_name": "5) Numerical validation: asymptotics versus Monte Carlo",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 34,
+    "approx_seconds": 18,
+    "text": "Axes: x-axis: moneyness k = K/S0 (unitless). y-axis: 1000 * C_E(K,T)/(lambda_C*T) or analogous put scaling (unitless).. Trend: Good alignment between asymptotic line and Monte Carlo points for strikes away from ATM; divergence around ATM where diffusion terms become important..",
+    "spoken_math": null,
+    "section_name": "5) Numerical validation: asymptotics versus Monte Carlo",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 35,
+    "approx_seconds": 24,
+    "text": "Significance: Confirms the single-jump, linear-in-T asymptotic for OTM pricing, and visually highlights why ATM requires a different square-root-in-T asymptotic.. Visualize a plot for VIX call options in the Eraker model. The horizontal axis is normalized VIX strike k equal to K divided by K ATM, starting at 1.0 and extending to about 1.12.",
+    "spoken_math": null,
+    "section_name": "5) Numerical validation: asymptotics versus Monte Carlo",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 36,
+    "approx_seconds": 25,
+    "text": "The vertical axis is again a rescaled price: one thousand times the VIX call price divided by lambda C times T. A smooth curve represents the asymptotic prediction; red dots represent Monte Carlo estimates. The curve starts highest at k equal to 1 and then drops sharply as k increases, reflecting that higher strikes require larger jumps to finish in the money.",
+    "spoken_math": null,
+    "section_name": "5) Numerical validation: asymptotics versus Monte Carlo",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 37,
+    "approx_seconds": 17,
+    "text": "Axes: x-axis: VIX moneyness k = K/K_ATM (unitless). y-axis: 1000 * C_V(K,T)/(lambda_C*T) (unitless).. Trend: Rapid decay of the rescaled call value as strike moves OTM; strong agreement between asymptotic curve and Monte Carlo points for OTM strikes..",
+    "spoken_math": null,
+    "section_name": "5) Numerical validation: asymptotics versus Monte Carlo",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 38,
+    "approx_seconds": 26,
+    "text": "Significance: Supports the claim that short-maturity OTM VIX calls are jump-dominated and accurately approximated by the order T single-jump formula.. Think of a two-panel figure for the Kou-type model: the left panel corresponds to a very short maturity like T equal to 0.01, and the right panel to a longer short maturity like T equal to 0.1.",
+    "spoken_math": null,
+    "section_name": "5) Numerical validation: asymptotics versus Monte Carlo",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 39,
+    "approx_seconds": 18,
+    "text": "In each panel, the x-axis is moneyness k equal to K over S0, and the y-axis is the rescaled coefficient one thousand times price over lambda C times T. Black curves show asymptotic predictions for calls and puts; red dots show Monte Carlo.",
+    "spoken_math": null,
+    "section_name": "5) Numerical validation: asymptotics versus Monte Carlo",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 40,
+    "approx_seconds": 19,
+    "text": "The left panel shows extremely tight overlap of dots and curves; the right panel still matches broadly but with larger deviations near ATM. Axes: x-axis: moneyness k = K/S0 (unitless). y-axis: 1000 * C_E(K,T)/(lambda_C*T) and 1000 * P_E(K,T)/(lambda_C*T) (unitless)..",
+    "spoken_math": null,
+    "section_name": "5) Numerical validation: asymptotics versus Monte Carlo",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 41,
+    "approx_seconds": 20,
+    "text": "Trend: As maturity decreases from 0.1 to 0.01, Monte Carlo points converge toward the asymptotic curves; deviations remain concentrated near ATM.. Significance: Demonstrates convergence of the theory as T goes to zero and emphasizes the regime separation: OTM is captured well by jump asymptotics, ATM needs diffusion terms..",
+    "spoken_math": null,
+    "section_name": "5) Numerical validation: asymptotics versus Monte Carlo",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 42,
+    "approx_seconds": 20,
+    "text": "Picture a two-panel figure for Kou-type VIX calls, again with T equal to 0.01 on the left and T equal to 0.1 on the right. The x-axis is normalized strike k equal to K over K ATM, ranging from 1.0 upward a few percent.",
+    "spoken_math": null,
+    "section_name": "5) Numerical validation: asymptotics versus Monte Carlo",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 43,
+    "approx_seconds": 18,
+    "text": "The y-axis is the rescaled VIX call price one thousand times price over lambda C times T. A black asymptotic curve falls sharply as k increases, and red Monte Carlo dots sit on top of it more closely for the smaller maturity panel.",
+    "spoken_math": null,
+    "section_name": "5) Numerical validation: asymptotics versus Monte Carlo",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 44,
+    "approx_seconds": 25,
+    "text": "Axes: x-axis: VIX moneyness k = K/K_ATM (unitless). y-axis: 1000 * C_V(K,T)/(lambda_C*T) (unitless).. Trend: Fast decay in value as strike increases above ATM; stronger asymptotic-MC agreement for smaller T.. Significance: Reinforces that the leading order for OTM VIX calls is a single-jump effect and that the asymptotic coefficient is practically useful at sufficiently short maturities..",
+    "spoken_math": null,
+    "section_name": "5) Numerical validation: asymptotics versus Monte Carlo",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 45,
+    "approx_seconds": 30,
+    "text": "In the small-window proxy, the at-the-money VIX strike is the square root of initial variance plus kappa. Kappa shifts the effective variance upward, so it shifts the VIX level and therefore the moneyness classification. A typical plot reports one thousand times the VIX call price divided by lambda C times T. Dividing by lambda C T isolates the predicted order T coefficient, making it easy to compare Monte Carlo prices to asymptotic limits.",
+    "spoken_math": [
+      "In the small-window proxy, the at-the-money VIX strike is the square root of initial variance plus kappa.",
+      "Kappa shifts the effective variance upward, so it shifts the VIX level and therefore the moneyness classification.",
+      "A typical plot reports one thousand times the VIX call price divided by lambda C times T.",
+      "Dividing by lambda C T isolates the predicted order T coefficient, making it easy to compare Monte Carlo prices to asymptotic limits."
+    ],
+    "section_name": "5) Numerical validation: asymptotics versus Monte Carlo",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 46,
+    "approx_seconds": 23,
+    "text": "We modeled the underlying and variance using local-stochastic volatility plus compound-Poisson jumps, including idiosyncratic and common co-jumps. Key simplification: as the VIX averaging window tau shrinks, VIX squared converges to eta squared of spot times variance plus a nonnegative jump correction kappa, allowing VIX options to be approximated by European payoffs on the state.",
+    "spoken_math": null,
+    "section_name": "Recap",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 47,
+    "approx_seconds": 22,
+    "text": "Core asymptotic dichotomy as option maturity T goes to zero: out-of-the-money option prices are order T and dominated by single-jump events, giving explicit intensity-weighted integrals over jump-size laws; at-the-money prices are order square root of T and dominated by diffusion, with jumps negligible at leading order.",
+    "spoken_math": null,
+    "section_name": "Recap",
+    "source_refs": null
+  },
+  {
+    "chunk_id": 48,
+    "approx_seconds": 15,
+    "text": "In specific jump-size models\u2014Eraker, Kou-type, and folded-normal\u2014these coefficients become closed form or one-dimensional integrals, and numerical experiments show strong agreement with Monte Carlo away from ATM and improving as T decreases.",
+    "spoken_math": null,
+    "section_name": "Recap",
+    "source_refs": null
+  }
+]
