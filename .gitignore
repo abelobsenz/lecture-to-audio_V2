@@ -1,2 +1,16 @@
 .env
-.env
+.venv/
+
+__pycache__/
+*.py[cod]
+.pytest_cache/
+*.egg-info/
+
+.DS_Store
+
+data/
+
+DerivedData/
+ios/LectureStream/Build LectureStream_*.txt
+*.xcuserstate
+xcuserdata/
