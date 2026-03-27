@@ -65,6 +65,22 @@ Process a folder of PDFs without running the server:
 lecture-to-audio /path/to/pdfs
 ```
 
+## Local Processing (Upload to Server)
+
+Process a local PDF (or folder) and upload the generated script + chunks to the server:
+
+```bash
+python tools/process_and_upload.py /path/to/file-or-folder.pdf --server http://YOUR_SERVER_IP:8002
+```
+
+## Local Drag-and-Drop Uploader
+
+Run the local drag-and-drop UI (opens at `http://127.0.0.1:8085`) to process PDFs on your machine and upload to the server:
+
+```bash
+python tools/drop_upload_server.py --server http://YOUR_SERVER_IP:8002
+```
+
 ## Sync Local Data Folder to Server
 
 If you already processed PDFs locally and want to push your `data/` folder (scripts + chunks) to the server:

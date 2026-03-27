@@ -45,6 +45,11 @@ final class PlayerViewModel: ObservableObject {
     private var lastQuestionContext: String = ""
     private var latestAssistantResponse: String = ""
     private var lastAssistantResponse: String = ""
+    private var audioBufferAwaiting: Bool = false
+    private var audioBufferActive: Bool = false
+    private var audioBufferSawEvent: Bool = false
+    private var audioBufferContinuation: CheckedContinuation<Void, Never>? = nil
+    private var audioBufferToken: UUID? = nil
     private var activeChunkIndex: Int? = nil
     private var rollbackChunkIndex: Int? = nil
     private var chunkIndex: Int = 0
@@ -86,6 +91,21 @@ final class PlayerViewModel: ObservableObject {
         realtime.onUserTranscriptCompleted = { [weak self] transcript in
             Task { @MainActor in
                 self?.handleUserTranscriptCompleted(transcript)
+            }
+        }
+        realtime.onOutputAudioBufferStarted = { [weak self] in
+            Task { @MainActor in
+                self?.handleAudioBufferStarted()
+            }
+        }
+        realtime.onOutputAudioBufferStopped = { [weak self] in
+            Task { @MainActor in
+                self?.handleAudioBufferStopped()
+            }
+        }
+        realtime.onOutputAudioBufferCleared = { [weak self] in
+            Task { @MainActor in
+                self?.handleAudioBufferCleared()
             }
         }
         realtime.onAssistantTextUpdate = { [weak self] text in
@@ -136,6 +156,7 @@ final class PlayerViewModel: ObservableObject {
     func startPlayback(resumeFromSaved: Bool = true) {
         let resumingFromPause = state == .paused
         playbackTask?.cancel()
+        finishAudioBufferWait()
         realtime.disconnect()
         responseContinuation = nil
         responseToken = nil
@@ -175,6 +196,7 @@ final class PlayerViewModel: ObservableObject {
 
     func stop() {
         playbackTask?.cancel()
+        finishAudioBufferWait()
         saveCurrentProgress()
         resumeAfterResponse()
         realtime.disconnect()
@@ -189,6 +211,7 @@ final class PlayerViewModel: ObservableObject {
             realtime.cancelResponse()
         }
         playbackTask?.cancel()
+        finishAudioBufferWait()
         state = .paused
         resumeAfterResponse()
         isMicEnabled = false
@@ -200,16 +223,19 @@ final class PlayerViewModel: ObservableObject {
     func interruptPlayback() {
         guard state == .playing else { return }
         state = .interrupted
-        interruptedDuringChunk = true
-        pendingRetryChunk = true
-        if let active = activeChunkIndex {
-            rollbackChunkIndex = active
-        } else {
-            rollbackChunkIndex = chunkIndex
+        if audioBufferAwaiting || audioBufferActive {
+            interruptedDuringChunk = true
+            pendingRetryChunk = true
+            if let active = activeChunkIndex {
+                rollbackChunkIndex = active
+            } else {
+                rollbackChunkIndex = chunkIndex
+            }
         }
         if realtime.isResponseActive {
             realtime.cancelResponse()
         }
+        finishAudioBufferWait()
         isMicEnabled = true
         realtime.setRemoteAudioMuted(true)
         realtime.setMicrophoneEnabled(true)
@@ -309,19 +335,25 @@ final class PlayerViewModel: ObservableObject {
                     try? await Task.sleep(nanoseconds: 200_000_000)
                 }
 
-                let startedAt = Date()
+                let timeout = max(30, (chunk.approxSeconds * 2) + 10)
+                audioBufferAwaiting = true
+                audioBufferActive = false
+                audioBufferSawEvent = false
                 realtime.sendUserText("Lecture chunk \(chunk.chunkId): \(chunk.text)")
                 realtime.requestResponse()
-
-                let timeout = max(30, (chunk.approxSeconds * 2) + 10)
                 await waitForResponse(maxWaitSeconds: timeout)
-
-                if state == .playing && !interruptedDuringChunk {
-                    let elapsed = Date().timeIntervalSince(startedAt)
-                    let remaining = TimeInterval(chunk.approxSeconds) - elapsed
+                if audioBufferSawEvent {
+                    if audioBufferAwaiting {
+                        await waitForAudioBufferStop(maxWaitSeconds: timeout)
+                    }
+                } else {
+                    let remaining = TimeInterval(chunk.approxSeconds)
                     if remaining > 0 {
                         try? await Task.sleep(nanoseconds: UInt64(remaining * 1_000_000_000))
                     }
+                }
+
+                if state == .playing && !interruptedDuringChunk {
                     if Task.isCancelled || state != .playing {
                         break
                     }
@@ -333,6 +365,7 @@ final class PlayerViewModel: ObservableObject {
                     // Replay the same chunk after an interruption to avoid skipping content.
                     pendingRetryChunk = false
                 }
+                audioBufferAwaiting = false
                 interruptedDuringChunk = false
                 if state != .playing {
                     break
@@ -370,6 +403,52 @@ final class PlayerViewModel: ObservableObject {
                 }
             }
         }
+    }
+
+    private func waitForAudioBufferStop(maxWaitSeconds: Int) async {
+        await withCheckedContinuation { continuation in
+            audioBufferContinuation?.resume()
+            audioBufferContinuation = continuation
+            let token = UUID()
+            audioBufferToken = token
+            Task { @MainActor [weak self] in
+                let nanos = UInt64(maxWaitSeconds) * 1_000_000_000
+                try? await Task.sleep(nanoseconds: nanos)
+                guard let self else { return }
+                if self.audioBufferToken == token {
+                    self.finishAudioBufferWait()
+                }
+            }
+        }
+    }
+
+    private func finishAudioBufferWait() {
+        audioBufferContinuation?.resume()
+        audioBufferContinuation = nil
+        audioBufferToken = nil
+        audioBufferAwaiting = false
+    }
+
+    private func handleAudioBufferStarted() {
+        guard audioBufferAwaiting else { return }
+        audioBufferActive = true
+        audioBufferSawEvent = true
+    }
+
+    private func handleAudioBufferStopped() {
+        guard audioBufferAwaiting else { return }
+        audioBufferActive = false
+        audioBufferSawEvent = true
+        finishAudioBufferWait()
+    }
+
+    private func handleAudioBufferCleared() {
+        guard audioBufferAwaiting else { return }
+        audioBufferActive = false
+        audioBufferSawEvent = true
+        interruptedDuringChunk = true
+        pendingRetryChunk = true
+        finishAudioBufferWait()
     }
 
     private func resumeAfterResponse() {
@@ -439,6 +518,7 @@ final class PlayerViewModel: ObservableObject {
             await playLoop()
         }
     }
+
 
     private func updateRecentContext(with chunk: LectureChunk) {
         recentChunks.append(RecentChunk(text: chunk.text, approxSeconds: chunk.approxSeconds))

@@ -50,8 +50,9 @@ def merge_chunks_to_script(
         "Rules: narration must be natural spoken text, no raw LaTeX. "
         "For spoken_math, convert LaTeX into speech, defining terms if they have not yet been introduced. "
         "Figure narration must describe axes/units, trends, comparisons, and why it matters. "
+        "For figure_narration.axes, output a single plain string, not an object or list. "
         "Make the lecture engaging: use vivid, precise language, emphasize concrete examples, and keep momentum. "
-        "Include smooth transitions between chapters. Pause for five seconds in between chapters. "
+        "Include smooth transitions between chapters. Avoid stage directions like [pause] or [silence]. "
         f"{_depth_instructions(depth)}"
     )
 

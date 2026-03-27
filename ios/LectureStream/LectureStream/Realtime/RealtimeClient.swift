@@ -16,6 +16,9 @@ final class RealtimeClient {
     var onUserTranscriptCompleted: ((String) -> Void)?
     var onError: ((String) -> Void)?
     var onErrorDetailed: ((String?, String) -> Void)?
+    var onOutputAudioBufferStarted: (() -> Void)?
+    var onOutputAudioBufferStopped: (() -> Void)?
+    var onOutputAudioBufferCleared: (() -> Void)?
 
     init() {
         webRTC.onDataMessage = { [weak self] message in
@@ -149,6 +152,14 @@ final class RealtimeClient {
             isResponseActive = false
             lastAssistantText = currentAssistantText
             onResponseCompleted?()
+        }
+
+        if type == "output_audio_buffer.started" {
+            onOutputAudioBufferStarted?()
+        } else if type == "output_audio_buffer.stopped" {
+            onOutputAudioBufferStopped?()
+        } else if type == "output_audio_buffer.cleared" {
+            onOutputAudioBufferCleared?()
         }
 
         if type == "conversation.item.input_audio_transcription.completed",

@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Any, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.db import JobStatus, LectureStatus
 
@@ -20,6 +20,30 @@ class FigureNarration(BaseModel):
     axes: Optional[str] = None
     trend: Optional[str] = None
     significance: Optional[str] = None
+
+    @field_validator("axes", mode="before")
+    @classmethod
+    def _coerce_axes(cls, value: Any) -> Optional[str]:
+        if value is None or isinstance(value, str):
+            return value
+        if isinstance(value, dict):
+            ordered_keys = ["x", "y", "z"]
+            parts: List[str] = []
+            for key in ordered_keys:
+                axis_value = value.get(key)
+                if isinstance(axis_value, str) and axis_value.strip():
+                    parts.append(f"{key}-axis: {axis_value.strip()}")
+            for key in sorted(value.keys()):
+                if key in ordered_keys:
+                    continue
+                axis_value = value[key]
+                if isinstance(axis_value, str) and axis_value.strip():
+                    parts.append(f"{key}: {axis_value.strip()}")
+            return " ".join(parts) if parts else str(value)
+        if isinstance(value, list):
+            text_parts = [str(item).strip() for item in value if str(item).strip()]
+            return "; ".join(text_parts) if text_parts else None
+        return str(value)
 
 
 class Chapter(BaseModel):
